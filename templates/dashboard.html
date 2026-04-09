@@ -104,15 +104,27 @@
   <div class="kpi-grid">
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">฿</div>
-      <div class="kpi-body"><div class="kpi-label">Total Spend</div><div class="kpi-value" id="kpiTotal">—</div></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Total Spend</div>
+        <div class="kpi-value" id="kpiTotal">—</div>
+        <div class="kpi-trend" id="kpiTotalTrend"></div>
+      </div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)">#</div>
-      <div class="kpi-body"><div class="kpi-label">Transactions</div><div class="kpi-value" id="kpiCount">—</div></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Transactions</div>
+        <div class="kpi-value" id="kpiCount">—</div>
+        <div class="kpi-trend" id="kpiCountTrend"></div>
+      </div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#55efc4,#00b894)">⌀</div>
-      <div class="kpi-body"><div class="kpi-label">Daily Average</div><div class="kpi-value" id="kpiAvgDaily">—</div></div>
+      <div class="kpi-body">
+        <div class="kpi-label">Daily Average</div>
+        <div class="kpi-value" id="kpiAvgDaily">—</div>
+        <div class="kpi-trend" id="kpiAvgDailyTrend"></div>
+      </div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#fdcb6e,#e17055)">★</div>
@@ -125,6 +137,36 @@
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#fd79a8,#e84393)">%</div>
       <div class="kpi-body"><div class="kpi-label">Credit Utilization</div><div class="kpi-value" id="kpiUtil">—</div></div>
+    </div>
+  </div>
+
+  <!-- ── Burn Rate Banner ── -->
+  <div class="glass-card burn-card" id="burnCard">
+    <div class="burn-block">
+      <div class="burn-label">⏱ Period Progress</div>
+      <div class="burn-value" id="burnDayVal">—</div>
+      <div class="burn-bar-track">
+        <div class="burn-bar-fill burn-bar-days" id="burnDayBar" style="width:0%"></div>
+      </div>
+      <div class="burn-sub" id="burnDaySub"></div>
+    </div>
+    <div class="burn-block">
+      <div class="burn-label">💳 Spend Pace</div>
+      <div class="burn-value" id="burnSpendVal">—</div>
+      <div class="burn-bar-track">
+        <div class="burn-bar-fill" id="burnSpendBar" style="width:0%"></div>
+      </div>
+      <div class="burn-sub" id="burnSpendSub"></div>
+    </div>
+    <div class="burn-block">
+      <div class="burn-label">📅 Daily Rate</div>
+      <div class="burn-value" id="burnRateVal">—</div>
+      <div class="burn-sub" id="burnRateSub"></div>
+    </div>
+    <div class="burn-projected">
+      <div class="burn-proj-label">Projected Total</div>
+      <div class="burn-proj-val" id="burnProjVal">—</div>
+      <div class="burn-proj-note" id="burnProjNote"></div>
     </div>
   </div>
 
@@ -156,6 +198,129 @@
     <div class="chart-card glass-card chart-merchants-wrap">
       <div class="chart-title">Top Merchants</div>
       <div class="chart-canvas-wrap"><canvas id="chartMerchants"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Top Spending Days + Credits & Refunds ── -->
+  <div class="chart-row-2col">
+
+    <!-- Top Spending Days -->
+    <div class="glass-card top-days-card">
+      <div class="chart-title">🔥 Top Spending Days</div>
+      <div id="topDaysList">
+        <div class="loading-row">Loading…</div>
+      </div>
+    </div>
+
+    <!-- Credits & Refunds -->
+    <div class="glass-card credits-card">
+      <div class="chart-title">↩ Credits &amp; Refunds</div>
+      <div class="credits-summary">
+        <div>
+          <div class="credit-stat-label">Total Received</div>
+          <div class="credit-stat-val" id="creditTotal">฿0</div>
+        </div>
+        <div>
+          <div class="credit-stat-label">Transactions</div>
+          <div class="credit-stat-val" id="creditCount">0</div>
+        </div>
+        <div>
+          <div class="credit-stat-label">Largest Refund</div>
+          <div class="credit-stat-val" id="creditMax">฿0</div>
+        </div>
+      </div>
+      <div id="creditList">
+        <div class="credits-empty">No refunds or credits in this period.</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ── Foreign Currency Summary ── -->
+  <div class="glass-card fx-card" id="fxCard" style="display:none">
+    <div class="chart-title">🌏 Foreign Currency Transactions</div>
+    <table class="fx-table">
+      <thead>
+        <tr>
+          <th>Currency</th>
+          <th class="text-right">Transactions</th>
+          <th class="text-right">Foreign Amount</th>
+          <th class="text-right">THB Paid</th>
+          <th class="text-right">Implied Rate</th>
+        </tr>
+      </thead>
+      <tbody id="fxTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- ── Chart Row 3: Day of Week + Month-over-Month ── -->
+  <div class="chart-row-insights">
+
+    <!-- Day of Week -->
+    <div class="chart-card glass-card">
+      <div class="chart-title">Spending by Day of Week</div>
+      <div class="chart-canvas-wrap" style="height:220px"><canvas id="chartDow"></canvas></div>
+      <div class="dow-summary">
+        <div>
+          <div class="dow-stat-label">Weekdays (Mon–Fri)</div>
+          <div class="dow-stat-val" id="dowWeekdayTotal">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Weekends (Sat–Sun)</div>
+          <div class="dow-stat-val" id="dowWeekendTotal">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Weekend Share</div>
+          <div class="dow-stat-val" id="dowWeekendPct">—</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Month-over-Month -->
+    <div class="chart-card glass-card" id="momSection">
+      <div class="chart-title">Month-over-Month by Category</div>
+      <div id="momEmpty" class="loading-row" style="display:none">
+        Upload at least 2 statements to see the month-over-month comparison.
+      </div>
+      <div class="chart-canvas-wrap" style="height:320px"><canvas id="chartMoM"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- ── Recurring Transactions ── -->
+  <div class="glass-card recurring-section">
+    <div class="txn-header">
+      <h3 class="chart-title" style="margin:0">
+        🔁 Recurring Transactions
+        <span class="recurring-sub">Merchants appearing across multiple statements</span>
+      </h3>
+      <div class="txn-controls">
+        <label class="filter-label" style="margin-right:4px">Min. statements:</label>
+        <select class="select-input" id="recurringMinOcc" style="min-width:70px">
+          <option value="2">2+</option>
+          <option value="3">3+</option>
+          <option value="4">4+</option>
+        </select>
+      </div>
+    </div>
+    <div class="txn-table-wrap">
+      <table class="txn-table">
+        <thead>
+          <tr>
+            <th>Merchant</th>
+            <th>Category</th>
+            <th class="text-right">Statements</th>
+            <th class="text-right">Avg Amount</th>
+            <th class="text-right">Total Paid</th>
+            <th class="text-right">Est. Annual (×12)</th>
+            <th>Type</th>
+            <th>Seen In</th>
+          </tr>
+        </thead>
+        <tbody id="recurringBody">
+          <tr><td colspan="8" class="loading-row">Loading…</td></tr>
+        </tbody>
+      </table>
     </div>
   </div>
 
@@ -218,7 +383,7 @@ Chart.defaults.color = 'rgba(255,255,255,0.7)';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
 Chart.defaults.font.family = "'Inter', sans-serif";
 
-let chartDonut, chartBar, chartLine, chartMerchants;
+let chartDonut, chartBar, chartLine, chartMerchants, chartDow, chartMoM;
 
 // ─────────────────────────────
 //  Helpers
@@ -328,9 +493,29 @@ qs('#applyDates').addEventListener('click', () => {
 // ─────────────────────────────
 //  KPIs
 // ─────────────────────────────
+function renderTrend(id, current, prev, lowerIsBetter = true) {
+  const el = qs('#' + id);
+  if (!el) return;
+  if (!prev || prev === 0) { el.innerHTML = ''; return; }
+  const pct  = (current - prev) / prev * 100;
+  const isUp = pct > 0;
+  if (Math.abs(pct) < 0.5) {
+    el.innerHTML = `<span class="trend-flat">→ flat vs prev</span>`;
+    return;
+  }
+  // For spending metrics: up = bad (red), down = good (green)
+  const cls   = (isUp === !lowerIsBetter) ? 'trend-down' : 'trend-up';
+  const arrow = isUp ? '↑' : '↓';
+  el.innerHTML = `<span class="${cls}">${arrow} ${Math.abs(pct).toFixed(1)}% vs prev</span>`;
+}
+
+let _lastSummary = null; // shared across loadKPIs + client-side renderers
+
 async function loadKPIs() {
   const r = await fetch(`/api/account/${ACCOUNT_NUM}/summary?${buildQuery()}`);
   const d = await r.json();
+  _lastSummary = d;
+
   qs('#kpiTotal').textContent    = fmt(d.total_spend);
   qs('#kpiCount').textContent    = d.transaction_count.toLocaleString();
   qs('#kpiAvgDaily').textContent = fmt(d.avg_daily);
@@ -340,6 +525,18 @@ async function loadKPIs() {
   qs('#kpiUtil').className = 'kpi-value ' +
     (d.credit_utilization > 80 ? 'text-danger' :
      d.credit_utilization > 50 ? 'text-warning' : 'text-teal');
+
+  // Trend indicators (lower spend = good)
+  if (d.has_prev) {
+    renderTrend('kpiTotalTrend',    d.total_spend,       d.prev_total_spend,       true);
+    renderTrend('kpiCountTrend',    d.transaction_count, d.prev_transaction_count, true);
+    renderTrend('kpiAvgDailyTrend', d.avg_daily,         d.prev_avg_daily,         true);
+  } else {
+    ['kpiTotalTrend','kpiCountTrend','kpiAvgDailyTrend'].forEach(id => {
+      const el = qs('#' + id);
+      if (el) el.innerHTML = '';
+    });
+  }
 }
 
 // ─────────────────────────────
@@ -685,15 +882,376 @@ updateSortHeaders();
 })();
 
 // ─────────────────────────────
+//  Burn Rate (Feature 4) — client-side
+// ─────────────────────────────
+function updateBurnRate(summary) {
+  const from = summary.date_from;
+  const to   = summary.date_to;
+  if (!from || !to) {
+    qs('#burnDayVal').textContent  = '—';
+    qs('#burnSpendVal').textContent = '—';
+    qs('#burnRateVal').textContent  = '—';
+    qs('#burnProjVal').textContent  = '—';
+    return;
+  }
+
+  const startDate  = new Date(from);
+  const endDate    = new Date(to);
+  const today      = new Date();
+  const clampedNow = new Date(Math.min(today, endDate));
+
+  const periodDays  = Math.max(1, Math.round((endDate - startDate) / 86400000) + 1);
+  const elapsedDays = Math.max(1, Math.round((clampedNow - startDate) / 86400000) + 1);
+  const dayPct      = Math.min(100, (elapsedDays / periodDays * 100));
+  const isCurrentPeriod = today <= endDate && today >= startDate;
+
+  const spend    = summary.total_spend;
+  const pace     = spend / elapsedDays;
+  const projected = pace * periodDays;
+  const prevTotal = summary.prev_total_spend;
+
+  // Period progress
+  qs('#burnDayVal').textContent  = `Day ${elapsedDays} of ${periodDays}`;
+  qs('#burnDayBar').style.width  = dayPct + '%';
+  qs('#burnDaySub').textContent  = isCurrentPeriod
+    ? `${periodDays - elapsedDays} days remaining`
+    : 'Period complete';
+
+  // Spend pace
+  const spendPct = prevTotal > 0 ? Math.min(150, spend / prevTotal * 100) : dayPct;
+  const isOver   = prevTotal > 0 && spend > prevTotal;
+  qs('#burnSpendVal').textContent    = fmt(spend);
+  qs('#burnSpendBar').style.width    = spendPct.toFixed(0) + '%';
+  qs('#burnSpendBar').className      = 'burn-bar-fill ' + (isOver ? 'burn-bar-over' : 'burn-bar-spend');
+  qs('#burnSpendSub').textContent    = prevTotal > 0
+    ? `${spendPct.toFixed(0)}% of prev period (${fmt(prevTotal)})`
+    : `฿${Number(pace).toLocaleString('en-US',{maximumFractionDigits:0})}/day avg`;
+
+  // Daily rate
+  qs('#burnRateVal').textContent  = fmt(pace) + '/day';
+  qs('#burnRateSub').textContent  = `${summary.transaction_count} txn over ${elapsedDays} day${elapsedDays!==1?'s':''}`;
+
+  // Projected
+  const projEl   = qs('#burnProjVal');
+  projEl.textContent  = isCurrentPeriod ? fmt(projected) : fmt(spend);
+  projEl.className    = 'burn-proj-val ' + (prevTotal > 0 && projected > prevTotal ? 'text-danger' : 'text-teal');
+  qs('#burnProjNote').textContent = isCurrentPeriod
+    ? (prevTotal > 0 ? `vs ฿${Number(prevTotal).toLocaleString('en-US',{maximumFractionDigits:0})} last period` : 'estimated at current pace')
+    : 'Final total';
+}
+
+// ─────────────────────────────
+//  Top Spending Days (Feature 7) — client-side
+// ─────────────────────────────
+function loadTopDays() {
+  const dayMap = {};
+  allTransactions.filter(t => !t.is_credit && t.post_date).forEach(t => {
+    if (!dayMap[t.post_date]) dayMap[t.post_date] = { total: 0, txns: [] };
+    dayMap[t.post_date].total += t.amount;
+    dayMap[t.post_date].txns.push(t.description);
+  });
+
+  const sorted = Object.entries(dayMap)
+    .map(([date, d]) => ({ date, total: d.total, txns: d.txns }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 5);
+
+  const maxTotal = sorted[0]?.total || 1;
+  const rankCls  = ['rank-1','rank-2','rank-3','rank-n','rank-n'];
+  const dofmt = d => {
+    const dt = new Date(d);
+    return dt.toLocaleDateString('en-US', { weekday:'short', day:'numeric', month:'short' });
+  };
+
+  const container = qs('#topDaysList');
+  if (!sorted.length) {
+    container.innerHTML = '<div class="loading-row">No transaction data.</div>';
+    return;
+  }
+
+  // Deduplicate + truncate merchant list per day
+  container.innerHTML = sorted.map((d, i) => {
+    const unique = [...new Set(d.txns)];
+    const merchants = unique.slice(0, 3).join(', ') + (unique.length > 3 ? ` +${unique.length-3} more` : '');
+    const barPct = (d.total / maxTotal * 100).toFixed(0);
+    return `
+      <div class="top-day-row">
+        <div class="top-day-rank ${rankCls[i]}">${i+1}</div>
+        <div class="top-day-info">
+          <div class="top-day-date">${dofmt(d.date)}</div>
+          <div class="top-day-merchants">${merchants}</div>
+        </div>
+        <div class="top-day-bar-wrap"><div class="top-day-bar" style="width:${barPct}%"></div></div>
+        <div class="top-day-amount">${fmt(d.total)}</div>
+      </div>`;
+  }).join('');
+}
+
+// ─────────────────────────────
+//  Credits & Refunds (Feature 5) — uses summary data + allTransactions
+// ─────────────────────────────
+function renderCredits(summary) {
+  qs('#creditTotal').textContent = fmt(summary.total_credits || 0);
+  qs('#creditCount').textContent = (summary.credit_count || 0).toLocaleString();
+  qs('#creditMax').textContent   = fmt(summary.max_credit || 0);
+
+  const credits = allTransactions
+    .filter(t => t.is_credit)
+    .sort((a, b) => b.amount - a.amount);
+
+  const list = qs('#creditList');
+  if (!credits.length) {
+    list.innerHTML = '<div class="credits-empty">No refunds or credits in this period.</div>';
+    return;
+  }
+
+  list.innerHTML = credits.map(t => `
+    <div class="credit-list-item">
+      <span class="credit-list-desc" title="${t.description}">${t.description}</span>
+      <span class="credit-list-date">${t.post_date || ''}</span>
+      <span class="credit-list-amt">+ ${fmt(t.amount)}</span>
+    </div>`).join('');
+}
+
+// ─────────────────────────────
+//  FX Summary (Feature 6) — client-side from allTransactions
+// ─────────────────────────────
+function loadFxSummary() {
+  const fxMap = {};
+  allTransactions.filter(t => !t.is_credit && t.foreign_currency && t.foreign_amount > 0).forEach(t => {
+    const cur = t.foreign_currency.toUpperCase();
+    if (!fxMap[cur]) fxMap[cur] = { count: 0, foreign: 0, thb: 0 };
+    fxMap[cur].count   += 1;
+    fxMap[cur].foreign += t.foreign_amount;
+    fxMap[cur].thb     += t.amount;
+  });
+
+  const fxCard = qs('#fxCard');
+  const rows   = Object.entries(fxMap).sort((a, b) => b[1].thb - a[1].thb);
+
+  if (!rows.length) {
+    fxCard.style.display = 'none';
+    return;
+  }
+  fxCard.style.display = 'block';
+
+  qs('#fxTableBody').innerHTML = rows.map(([cur, d]) => {
+    const rate = d.foreign > 0 ? (d.thb / d.foreign) : 0;
+    return `
+      <tr>
+        <td><span class="fx-currency">${cur}</span></td>
+        <td class="text-right">${d.count}</td>
+        <td class="text-right">${Number(d.foreign).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+        <td class="text-right">${fmt(d.thb)}</td>
+        <td class="text-right"><span class="fx-rate-pill">1 ${cur} = ฿${rate.toFixed(2)}</span></td>
+      </tr>`;
+  }).join('');
+}
+
+// ─────────────────────────────
+//  Day of Week (client-side)
+// ─────────────────────────────
+function loadDayOfWeek() {
+  const DOW = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const totals = new Array(7).fill(0);
+  const counts = new Array(7).fill(0);
+
+  allTransactions.filter(t => !t.is_credit && t.post_date).forEach(t => {
+    const dow = (new Date(t.post_date).getDay() + 6) % 7; // 0=Mon…6=Sun
+    totals[dow] += t.amount;
+    counts[dow]++;
+  });
+
+  const maxVal   = Math.max(...totals, 1);
+  const barColors = totals.map((v, i) =>
+    i >= 5 ? '#a29bfe'                              // weekend = purple
+    : v >= maxVal * 0.8 ? '#ff6b6b'                 // top day = red
+    : '#74b9ff');                                    // normal = blue
+
+  if (chartDow) chartDow.destroy();
+  chartDow = new Chart(qs('#chartDow').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: DOW,
+      datasets: [{ label: 'Spend', data: totals, backgroundColor: barColors,
+                   borderRadius: 8, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c =>
+          ` ${fmt(c.raw)}  (${counts[c.dataIndex]} txn)` } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' },
+             ticks: { callback: v => '฿' + v.toLocaleString() } }
+      }
+    }
+  });
+
+  const weekdayTotal = totals.slice(0,5).reduce((a,b)=>a+b,0);
+  const weekendTotal = totals.slice(5).reduce((a,b)=>a+b,0);
+  const allTotal     = weekdayTotal + weekendTotal;
+  qs('#dowWeekdayTotal').textContent = fmt(weekdayTotal);
+  qs('#dowWeekendTotal').textContent = fmt(weekendTotal);
+  qs('#dowWeekendPct').textContent   = allTotal > 0
+    ? ((weekendTotal / allTotal) * 100).toFixed(0) + '%' : '—';
+}
+
+// ─────────────────────────────
+//  Month-over-Month (account-wide, loaded once)
+// ─────────────────────────────
+function shortStmtLabel(dateStr) {
+  const p = dateStr.split(' ');
+  if (p.length === 3) return p[1].charAt(0) + p[1].slice(1).toLowerCase() + " '" + p[2].slice(2);
+  return dateStr;
+}
+
+async function loadMonthlyComparison() {
+  const r    = await fetch(`/api/account/${ACCOUNT_NUM}/monthly-comparison`);
+  const data = await r.json();
+
+  const momEmptyEl  = qs('#momEmpty');
+  const momCanvasEl = qs('#chartMoM');
+
+  // Build ordered statement list
+  const stmtMap = {};
+  data.forEach(d => { if (!stmtMap[d.stmt_id]) stmtMap[d.stmt_id] = d.statement_date; });
+  const stmtIds = Object.keys(stmtMap).map(Number).sort((a,b)=>a-b);
+
+  if (stmtIds.length < 2) {
+    momEmptyEl.style.display = 'block';
+    momCanvasEl.style.display = 'none';
+    return;
+  }
+  momEmptyEl.style.display = 'none';
+  momCanvasEl.style.display = 'block';
+
+  const labels = stmtIds.map(id => shortStmtLabel(stmtMap[id]));
+
+  // Top 6 categories by total spend
+  const catTotals = {};
+  data.forEach(d => { catTotals[d.category] = (catTotals[d.category]||0) + d.total; });
+  const topCats = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]).slice(0,6).map(([c])=>c);
+
+  const datasets = topCats.map(cat => ({
+    label: (CAT_ICONS[cat]||'') + ' ' + cat,
+    data:  stmtIds.map(sid => {
+      const row = data.find(d => d.stmt_id === sid && d.category === cat);
+      return row ? row.total : 0;
+    }),
+    backgroundColor: (CAT_COLORS[cat]||'#b2bec3') + 'cc',
+    borderColor:     CAT_COLORS[cat]||'#b2bec3',
+    borderWidth: 1, borderRadius: 4,
+  }));
+
+  // Remaining categories → "Other"
+  const otherData = stmtIds.map(sid =>
+    data.filter(d => d.stmt_id===sid && !topCats.includes(d.category))
+        .reduce((s,d)=>s+d.total, 0)
+  );
+  if (otherData.some(v=>v>0)) {
+    datasets.push({ label:'📌 Others', data: otherData,
+      backgroundColor:'#b2bec388', borderColor:'#b2bec3', borderWidth:1, borderRadius:4 });
+  }
+
+  if (chartMoM) chartMoM.destroy();
+  chartMoM = new Chart(qs('#chartMoM').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: {
+        legend: { position:'bottom', labels:{ boxWidth:12, font:{size:11}, padding:10 } },
+        tooltip: { callbacks: { label: c => ` ${c.dataset.label}: ${fmt(c.raw)}` } }
+      },
+      scales: {
+        x: { stacked: true, grid:{ display:false } },
+        y: { stacked: true,
+             grid:{ color:'rgba(255,255,255,0.06)' },
+             ticks:{ callback: v => '฿'+v.toLocaleString() } }
+      }
+    }
+  });
+}
+
+// ─────────────────────────────
+//  Recurring transactions (account-wide, loaded once)
+// ─────────────────────────────
+let allRecurring = [];
+
+async function loadRecurring() {
+  const r  = await fetch(`/api/account/${ACCOUNT_NUM}/recurring`);
+  allRecurring = await r.json();
+  renderRecurring();
+}
+
+function renderRecurring() {
+  const minOcc = parseInt(qs('#recurringMinOcc').value) || 2;
+  const data   = allRecurring.filter(r => r.stmt_count >= minOcc);
+  const tbody  = qs('#recurringBody');
+
+  if (!data.length) {
+    tbody.innerHTML = `<tr><td colspan="8" class="loading-row">
+      ${allRecurring.length
+        ? 'No items match the selected filter.'
+        : 'No recurring transactions detected — upload more statements to enable this analysis.'}
+    </td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = data.map(r => {
+    const color = CAT_COLORS[r.category] || '#b2bec3';
+    const icon  = CAT_ICONS[r.category]  || '📌';
+    const typeBadge = r.is_fixed
+      ? '<span class="recurring-badge recurring-fixed">Fixed</span>'
+      : '<span class="recurring-badge recurring-variable">Variable</span>';
+    const monthsList = (r.months||'').split(',').filter(Boolean)
+      .map(m => { const p=m.trim().split(' '); return p.length===3 ? `${p[1]} '${p[2].slice(2)}`:m; })
+      .map(m => `<span class="month-chip">${m}</span>`).join('');
+
+    return `<tr>
+      <td class="txn-desc">${r.description}</td>
+      <td><span class="cat-badge" style="background:${color}22;color:${color};border:1px solid ${color}44">
+          ${icon} ${r.category}</span></td>
+      <td class="text-right"><strong>${r.stmt_count}</strong>
+        <span style="color:var(--text-3);font-size:11px"> / ${r.txn_count} txn</span></td>
+      <td class="text-right">${fmt(r.avg_amount)}</td>
+      <td class="text-right">${fmt(r.total_amount)}</td>
+      <td class="text-right text-warning">${fmt(r.avg_amount * 12)}</td>
+      <td>${typeBadge}</td>
+      <td><div class="months-list">${monthsList}</div></td>
+    </tr>`;
+  }).join('');
+}
+
+qs('#recurringMinOcc').addEventListener('change', renderRecurring);
+
+// ─────────────────────────────
 //  Refresh all
 // ─────────────────────────────
 async function refreshAll() {
   await Promise.all([
-    loadKPIs(), loadDonut(), loadBar(), loadLine(), loadMerchants(), loadTransactions()
+    loadKPIs(), loadDonut(), loadBar(), loadLine(), loadMerchants(),
+    loadTransactions(),
   ]);
+  // Client-side analytics that depend on allTransactions or _lastSummary
+  loadDayOfWeek();
+  loadTopDays();
+  loadFxSummary();
+  if (_lastSummary) {
+    updateBurnRate(_lastSummary);
+    renderCredits(_lastSummary);
+  }
 }
 
 refreshAll();
+
+// Account-wide analytics — load once, independent of date filter
+loadMonthlyComparison();
+loadRecurring();
 
 // ─────────────────────────────
 //  Recategorize

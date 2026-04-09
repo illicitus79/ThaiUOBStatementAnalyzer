@@ -375,16 +375,80 @@ def api_summary(account_num):
         if stmt_row and stmt_row['credit_line']:
             credit_pct = round(stmt_row['total_balance'] / stmt_row['credit_line'] * 100, 1)
 
+        # ── Previous period comparison ──
+        all_stmts = db.execute(
+            'SELECT id FROM statements WHERE account_number = ? ORDER BY statement_date DESC',
+            (account_num,)
+        ).fetchall()
+        stmt_ids = [s['id'] for s in all_stmts]
+
+        current_idx = 0
+        if statement_id and statement_id != 'all':
+            sid = int(statement_id)
+            if sid in stmt_ids:
+                current_idx = stmt_ids.index(sid)
+
+        prev_total, prev_count, prev_avg_daily = 0, 0, 0
+        has_prev = current_idx + 1 < len(stmt_ids)
+        if has_prev:
+            prev_sid = stmt_ids[current_idx + 1]
+            prev_stats = db.execute(
+                'SELECT COUNT(*) as cnt, SUM(t.amount) as total, '
+                'MIN(t.post_date) as d_min, MAX(t.post_date) as d_max '
+                'FROM transactions t JOIN statements s ON t.statement_id = s.id '
+                'WHERE s.account_number = ? AND t.statement_id = ? AND t.is_credit = 0',
+                (account_num, prev_sid)
+            ).fetchone()
+            if prev_stats and prev_stats['total']:
+                p_days = 1
+                if prev_stats['d_min'] and prev_stats['d_max']:
+                    p_days = max(1, (date_type.fromisoformat(prev_stats['d_max']) -
+                                     date_type.fromisoformat(prev_stats['d_min'])).days + 1)
+                prev_total      = round(prev_stats['total'] or 0, 2)
+                prev_count      = prev_stats['cnt']
+                prev_avg_daily  = round(prev_total / p_days, 2)
+
+        # ── Credits / refunds in the same period ──
+        cr_params = [account_num]
+        cr_clause = ''
+        if statement_id and statement_id != 'all':
+            cr_clause += ' AND t.statement_id = ?'
+            cr_params.append(int(statement_id))
+        if date_from:
+            cr_clause += ' AND t.post_date >= ?'
+            cr_params.append(date_from)
+        if date_to:
+            cr_clause += ' AND t.post_date <= ?'
+            cr_params.append(date_to)
+
+        cr_stats = db.execute(f'''
+            SELECT COUNT(*) as cnt,
+                   COALESCE(SUM(t.amount), 0) as total,
+                   COALESCE(MAX(t.amount), 0) as max_amt
+            FROM transactions t
+            JOIN statements s ON t.statement_id = s.id
+            WHERE s.account_number = ? AND t.is_credit = 1{cr_clause}
+        ''', cr_params).fetchone()
+
         return jsonify({
-            'total_spend':       round(total, 2),
-            'transaction_count': stats['cnt'],
-            'avg_transaction':   round(stats['avg_amt'] or 0, 2),
-            'max_transaction':   round(stats['max_amt'] or 0, 2),
-            'avg_daily':         round(total / days, 2),
-            'top_category':      top_cat['category'] if top_cat else 'N/A',
-            'credit_utilization': credit_pct,
-            'rewards_points':    stmt_row['rewards_points'] if stmt_row else 0,
-            'days_in_period':    days,
+            'total_spend':            round(total, 2),
+            'transaction_count':      stats['cnt'],
+            'avg_transaction':        round(stats['avg_amt'] or 0, 2),
+            'max_transaction':        round(stats['max_amt'] or 0, 2),
+            'avg_daily':              round(total / days, 2),
+            'top_category':           top_cat['category'] if top_cat else 'N/A',
+            'credit_utilization':     credit_pct,
+            'rewards_points':         stmt_row['rewards_points'] if stmt_row else 0,
+            'days_in_period':         days,
+            'date_from':              d_min or date_from or '',
+            'date_to':                d_max or date_to or '',
+            'has_prev':               has_prev,
+            'prev_total_spend':       prev_total,
+            'prev_transaction_count': prev_count,
+            'prev_avg_daily':         prev_avg_daily,
+            'total_credits':          round(cr_stats['total'], 2),
+            'credit_count':           cr_stats['cnt'],
+            'max_credit':             round(cr_stats['max_amt'], 2),
         })
     finally:
         db.close()
@@ -472,6 +536,71 @@ def api_transactions(account_num):
             ORDER BY t.post_date DESC, t.id DESC
         ''', params).fetchall()
         return jsonify([dict(r) for r in rows])
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────
+#  Month-over-Month comparison
+# ──────────────────────────────────────────────
+
+@app.route('/api/account/<account_num>/monthly-comparison')
+def api_monthly_comparison(account_num):
+    """Per-statement, per-category spend totals — used for the MoM stacked bar chart."""
+    db = get_db()
+    try:
+        rows = db.execute('''
+            SELECT s.id AS stmt_id, s.statement_date,
+                   t.category, SUM(t.amount) AS total, COUNT(*) AS cnt
+            FROM transactions t
+            JOIN statements s ON t.statement_id = s.id
+            WHERE s.account_number = ? AND t.is_credit = 0
+            GROUP BY s.id, t.category
+            ORDER BY s.id ASC, t.category
+        ''', (account_num,)).fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────
+#  Recurring transaction detection
+# ──────────────────────────────────────────────
+
+@app.route('/api/account/<account_num>/recurring')
+def api_recurring(account_num):
+    """
+    Merchants that appear in 2+ distinct statements.
+    is_fixed=True when max/min amount variance is <10% of the average (likely a subscription).
+    """
+    db = get_db()
+    try:
+        rows = db.execute('''
+            SELECT t.description, t.category,
+                   COUNT(DISTINCT t.statement_id)            AS stmt_count,
+                   COUNT(*)                                  AS txn_count,
+                   ROUND(AVG(t.amount), 2)                   AS avg_amount,
+                   ROUND(MIN(t.amount), 2)                   AS min_amount,
+                   ROUND(MAX(t.amount), 2)                   AS max_amount,
+                   ROUND(SUM(t.amount), 2)                   AS total_amount,
+                   GROUP_CONCAT(DISTINCT s.statement_date)   AS months
+            FROM transactions t
+            JOIN statements s ON t.statement_id = s.id
+            WHERE s.account_number = ? AND t.is_credit = 0
+            GROUP BY UPPER(t.description)
+            HAVING stmt_count >= 2
+            ORDER BY stmt_count DESC, total_amount DESC
+        ''', (account_num,)).fetchall()
+
+        result = []
+        for r in rows:
+            avg = r['avg_amount'] or 0
+            variance = (r['max_amount'] - r['min_amount']) / avg if avg else 0
+            result.append({
+                **dict(r),
+                'is_fixed': variance < 0.10,
+            })
+        return jsonify(result)
     finally:
         db.close()
 
