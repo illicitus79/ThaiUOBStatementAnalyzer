@@ -1,0 +1,17 @@
+# Database
+instance/
+
+# Uploaded statements
+uploads/
+Statements/
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+venv/
+.env
+
+# IDE
+.vscode/
+.idea/

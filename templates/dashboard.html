@@ -1,0 +1,693 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — {{ latest.account_number }}{% endblock %}
+
+{% block head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block nav_extra %}
+<span class="nav-badge">{{ latest.card_type }}</span>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+
+  <!-- ── Account Header ── -->
+  <div class="dash-header glass-card">
+    <div class="dh-left">
+      <a href="{{ url_for('index') }}" class="btn btn-ghost btn-sm">← Accounts</a>
+      <div>
+        <h2 class="dh-name">{{ latest.cardholder_name or 'Account Holder' }}</h2>
+        <div class="dh-meta">
+          <span class="badge badge-blue">{{ latest.card_type }}</span>
+          <span class="dh-card-num">{{ latest.card_number or '—' }}</span>
+          <span class="dh-sep">|</span>
+          <span>Account: <strong>{{ latest.account_number }}</strong></span>
+          <span class="dh-sep">|</span>
+          <span class="dh-stmt-count">
+            <strong>{{ statements|length }}</strong> statement{{ 's' if statements|length != 1 else '' }} uploaded
+          </span>
+        </div>
+      </div>
+    </div>
+    <div class="dh-right">
+      <div class="dh-stat">
+        <div class="dh-stat-label">Current Balance</div>
+        <div class="dh-stat-val text-danger">฿{{ '{:,.2f}'.format(latest.total_balance or 0) }}</div>
+      </div>
+      <div class="dh-stat">
+        <div class="dh-stat-label">Min. Payment</div>
+        <div class="dh-stat-val text-warning">฿{{ '{:,.2f}'.format(latest.minimum_payment or 0) }}</div>
+      </div>
+      <div class="dh-stat">
+        <div class="dh-stat-label">Reward Points</div>
+        <div class="dh-stat-val text-teal">{{ '{:,}'.format(latest.rewards_points or 0) }}</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Filter Bar ── -->
+  <div class="filter-bar glass-card">
+    <!-- Statement selector -->
+    <div class="filter-group">
+      <div class="filter-label">Statement</div>
+      <select class="select-input" id="stmtSelect">
+        <option value="all">All Statements</option>
+        {% for s in statements %}
+        <option value="{{ s.id }}" data-due="{{ s.payment_due_date or '' }}">
+          {{ s.statement_date }} — Due {{ s.payment_due_date or '?' }}
+        </option>
+        {% endfor %}
+      </select>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Period chips -->
+    <div class="filter-group">
+      <div class="filter-label">Period</div>
+      <div class="filter-chips" id="filterChips">
+        <button class="chip active" data-range="all">All</button>
+        <button class="chip" data-range="7">Last 7 days</button>
+        <button class="chip" data-range="14">Last 14 days</button>
+        <button class="chip" data-range="30">Last 30 days</button>
+        <button class="chip" data-range="custom">Custom</button>
+      </div>
+    </div>
+
+    <!-- Custom date range -->
+    <div class="filter-dates" id="customDates" style="display:none">
+      <input type="date" id="dateFrom" class="date-input" />
+      <span style="color:var(--text-3)">to</span>
+      <input type="date" id="dateTo"   class="date-input" />
+      <button class="btn btn-primary btn-sm" id="applyDates">Apply</button>
+    </div>
+
+    <!-- Active range display -->
+    <div class="filter-active-range" id="activeRange"></div>
+
+    <!-- Statement delete (shown only when specific statement selected) -->
+    <div id="stmtActions" style="display:none; margin-left:auto">
+      <form id="deleteStmtForm" method="POST" style="display:inline"
+            onsubmit="return confirm('Delete this statement and all its transactions?')">
+        <button type="submit" class="btn btn-ghost btn-sm btn-danger-ghost">Delete Statement</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ── KPI Cards ── -->
+  <div class="kpi-grid">
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">฿</div>
+      <div class="kpi-body"><div class="kpi-label">Total Spend</div><div class="kpi-value" id="kpiTotal">—</div></div>
+    </div>
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)">#</div>
+      <div class="kpi-body"><div class="kpi-label">Transactions</div><div class="kpi-value" id="kpiCount">—</div></div>
+    </div>
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#55efc4,#00b894)">⌀</div>
+      <div class="kpi-body"><div class="kpi-label">Daily Average</div><div class="kpi-value" id="kpiAvgDaily">—</div></div>
+    </div>
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#fdcb6e,#e17055)">★</div>
+      <div class="kpi-body"><div class="kpi-label">Top Category</div><div class="kpi-value kpi-small" id="kpiTopCat">—</div></div>
+    </div>
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#74b9ff,#0984e3)">↑</div>
+      <div class="kpi-body"><div class="kpi-label">Largest Transaction</div><div class="kpi-value" id="kpiMax">—</div></div>
+    </div>
+    <div class="kpi-card glass-card">
+      <div class="kpi-icon" style="background:linear-gradient(135deg,#fd79a8,#e84393)">%</div>
+      <div class="kpi-body"><div class="kpi-label">Credit Utilization</div><div class="kpi-value" id="kpiUtil">—</div></div>
+    </div>
+  </div>
+
+  <!-- ── Charts Row 1 ── -->
+  <div class="chart-row">
+    <div class="chart-card glass-card chart-donut-wrap">
+      <div class="chart-title">Spending by Category</div>
+      <div class="donut-container">
+        <canvas id="chartDonut"></canvas>
+        <div class="donut-center">
+          <div class="donut-total" id="donutTotal">฿0</div>
+          <div class="donut-label">Total</div>
+        </div>
+      </div>
+      <div class="legend" id="donutLegend"></div>
+    </div>
+    <div class="chart-card glass-card chart-bar-wrap">
+      <div class="chart-title">Daily Spending Trend</div>
+      <div class="chart-canvas-wrap"><canvas id="chartBar"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Charts Row 2 ── -->
+  <div class="chart-row">
+    <div class="chart-card glass-card chart-line-wrap">
+      <div class="chart-title">Cumulative Spending</div>
+      <div class="chart-canvas-wrap"><canvas id="chartLine"></canvas></div>
+    </div>
+    <div class="chart-card glass-card chart-merchants-wrap">
+      <div class="chart-title">Top Merchants</div>
+      <div class="chart-canvas-wrap"><canvas id="chartMerchants"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ── Transaction Table ── -->
+  <div class="txn-section glass-card">
+    <div class="txn-header">
+      <h3 class="chart-title" style="margin:0">Transactions</h3>
+      <div class="txn-controls">
+        <input type="text" class="search-input" id="txnSearch" placeholder="Search merchant…" />
+        <select class="select-input" id="txnCategory">
+          <option value="all">All Categories</option>
+        </select>
+        <span class="txn-count" id="txnCount"></span>
+      </div>
+    </div>
+    <div class="txn-table-wrap">
+      <table class="txn-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-col="post_date">Post Date <span class="sort-icon"></span></th>
+            <th class="sortable" data-col="trans_date">Trans Date <span class="sort-icon"></span></th>
+            <th class="sortable" data-col="description">Description <span class="sort-icon"></span></th>
+            <th class="sortable" data-col="category">Category <span class="sort-icon"></span></th>
+            <th class="sortable" data-col="stmt_date">Statement <span class="sort-icon"></span></th>
+            <th>Foreign</th>
+            <th class="sortable text-right" data-col="amount">Amount (THB) <span class="sort-icon"></span></th>
+          </tr>
+        </thead>
+        <tbody id="txnBody">
+          <tr><td colspan="7" class="loading-row">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination-bar" id="paginationBar"></div>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const ACCOUNT_NUM = {{ latest.account_number | tojson }};
+const CAT_COLORS  = {{ category_colors | tojson }};
+const CAT_ICONS   = {{ category_icons  | tojson }};
+
+// Pre-load statement list from server
+const ALL_STATEMENTS = {{ statements | tojson }};
+
+// ── State ──
+let currentStmtId = 'all';
+let globalDateMin = {{ date_min | tojson }};
+let globalDateMax = {{ date_max | tojson }};
+let fromDate = globalDateMin;
+let toDate   = globalDateMax;
+
+// ── Chart.js defaults ──
+Chart.defaults.color = 'rgba(255,255,255,0.7)';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
+Chart.defaults.font.family = "'Inter', sans-serif";
+
+let chartDonut, chartBar, chartLine, chartMerchants;
+
+// ─────────────────────────────
+//  Helpers
+// ─────────────────────────────
+const fmt = n => '฿' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+const qs  = s => document.querySelector(s);
+
+function buildQuery() {
+  const parts = [];
+  if (currentStmtId !== 'all') parts.push(`statement_id=${currentStmtId}`);
+  if (fromDate) parts.push(`from=${fromDate}`);
+  if (toDate)   parts.push(`to=${toDate}`);
+  return parts.join('&');
+}
+
+function updateActiveRange() {
+  const el = qs('#activeRange');
+  if (fromDate && toDate) el.textContent = `${fromDate}  →  ${toDate}`;
+  else el.textContent = '';
+}
+
+// ─────────────────────────────
+//  Statement selector
+// ─────────────────────────────
+qs('#stmtSelect').addEventListener('change', e => {
+  currentStmtId = e.target.value;
+  const actionsEl = qs('#stmtActions');
+  const deleteForm = qs('#deleteStmtForm');
+
+  if (currentStmtId === 'all') {
+    // Reset to global date range
+    fromDate = globalDateMin;
+    toDate   = globalDateMax;
+    actionsEl.style.display = 'none';
+    // Reset chip to "All"
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.querySelector('.chip[data-range="all"]').classList.add('active');
+    qs('#customDates').style.display = 'none';
+  } else {
+    // Snap date range to the selected statement's bounds
+    const stmt = ALL_STATEMENTS.find(s => s.id == currentStmtId);
+    if (stmt) {
+      fromDate = stmt.date_min || globalDateMin;
+      toDate   = stmt.date_max || globalDateMax;
+      qs('#dateFrom').value = fromDate;
+      qs('#dateTo').value   = toDate;
+    }
+    // Show delete button for this statement
+    deleteForm.action = `/statement/${currentStmtId}/delete`;
+    actionsEl.style.display = 'block';
+    // Mark chip as custom
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  }
+
+  updateActiveRange();
+  refreshAll();
+});
+
+// ─────────────────────────────
+//  Period chips
+// ─────────────────────────────
+qs('#filterChips').addEventListener('click', e => {
+  const chip = e.target.closest('.chip');
+  if (!chip) return;
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  chip.classList.add('active');
+
+  const range = chip.dataset.range;
+  const customEl = qs('#customDates');
+
+  // Determine bounds based on current statement scope
+  const effectiveMax = toDate || globalDateMax;
+
+  if (range === 'custom') { customEl.style.display = 'flex'; return; }
+  customEl.style.display = 'none';
+
+  if (range === 'all') {
+    if (currentStmtId !== 'all') {
+      const stmt = ALL_STATEMENTS.find(s => s.id == currentStmtId);
+      fromDate = stmt ? (stmt.date_min || globalDateMin) : globalDateMin;
+      toDate   = stmt ? (stmt.date_max || globalDateMax) : globalDateMax;
+    } else {
+      fromDate = globalDateMin;
+      toDate   = globalDateMax;
+    }
+  } else {
+    const end   = new Date(effectiveMax || new Date());
+    const start = new Date(end);
+    start.setDate(start.getDate() - parseInt(range) + 1);
+    fromDate = start.toISOString().slice(0, 10);
+    toDate   = end.toISOString().slice(0, 10);
+  }
+
+  qs('#dateFrom').value = fromDate;
+  qs('#dateTo').value   = toDate;
+  updateActiveRange();
+  refreshAll();
+});
+
+qs('#applyDates').addEventListener('click', () => {
+  fromDate = qs('#dateFrom').value;
+  toDate   = qs('#dateTo').value;
+  updateActiveRange();
+  refreshAll();
+});
+
+// ─────────────────────────────
+//  KPIs
+// ─────────────────────────────
+async function loadKPIs() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/summary?${buildQuery()}`);
+  const d = await r.json();
+  qs('#kpiTotal').textContent    = fmt(d.total_spend);
+  qs('#kpiCount').textContent    = d.transaction_count.toLocaleString();
+  qs('#kpiAvgDaily').textContent = fmt(d.avg_daily);
+  qs('#kpiTopCat').textContent   = (CAT_ICONS[d.top_category] || '') + ' ' + d.top_category;
+  qs('#kpiMax').textContent      = fmt(d.max_transaction);
+  qs('#kpiUtil').textContent     = d.credit_utilization + '%';
+  qs('#kpiUtil').className = 'kpi-value ' +
+    (d.credit_utilization > 80 ? 'text-danger' :
+     d.credit_utilization > 50 ? 'text-warning' : 'text-teal');
+}
+
+// ─────────────────────────────
+//  Donut
+// ─────────────────────────────
+async function loadDonut() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/category-breakdown?${buildQuery()}`);
+  const data = await r.json();
+
+  const labels  = data.map(d => d.category);
+  const amounts = data.map(d => d.total);
+  const colors  = data.map(d => CAT_COLORS[d.category] || '#b2bec3');
+  const total   = amounts.reduce((a, b) => a + b, 0);
+
+  qs('#donutTotal').textContent = fmt(total);
+
+  if (chartDonut) chartDonut.destroy();
+  chartDonut = new Chart(qs('#chartDonut').getContext('2d'), {
+    type: 'doughnut',
+    data: { labels, datasets: [{ data: amounts, backgroundColor: colors,
+            borderColor: 'rgba(0,0,0,0.3)', borderWidth: 2, hoverOffset: 8 }] },
+    options: { cutout: '68%',
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${fmt(c.raw)}  (${((c.raw/total)*100).toFixed(1)}%)` } } } }
+  });
+
+  qs('#donutLegend').innerHTML = data.map(d => `
+    <div class="legend-item">
+      <span class="legend-dot" style="background:${CAT_COLORS[d.category]||'#b2bec3'}"></span>
+      <span class="legend-name">${CAT_ICONS[d.category]||''} ${d.category}</span>
+      <span class="legend-amt">${fmt(d.total)}</span>
+    </div>`).join('');
+}
+
+// ─────────────────────────────
+//  Bar (daily)
+// ─────────────────────────────
+async function loadBar() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/daily-spending?${buildQuery()}`);
+  const data = await r.json();
+
+  const labels  = data.map(d => d.post_date ? d.post_date.slice(5) : '');
+  const amounts = data.map(d => d.total);
+  const max     = Math.max(...amounts);
+  const barColors = amounts.map(v =>
+    v >= max * 0.8 ? '#ff6b6b' : v >= max * 0.5 ? '#fdcb6e' : '#74b9ff');
+
+  if (chartBar) chartBar.destroy();
+  chartBar = new Chart(qs('#chartBar').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Daily Spend', data: amounts,
+            backgroundColor: barColors, borderRadius: 6, borderSkipped: false }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${fmt(c.raw)}` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { maxRotation: 45, font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' },
+             ticks: { callback: v => '฿' + v.toLocaleString() } } } }
+  });
+}
+
+// ─────────────────────────────
+//  Line (cumulative)
+// ─────────────────────────────
+async function loadLine() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/daily-spending?${buildQuery()}`);
+  const data = await r.json();
+
+  const labels = data.map(d => d.post_date ? d.post_date.slice(5) : '');
+  let cum = 0;
+  const cumAmounts = data.map(d => { cum += d.total; return cum; });
+
+  const ctx = qs('#chartLine').getContext('2d');
+  const gradient = ctx.createLinearGradient(0, 0, 0, 300);
+  gradient.addColorStop(0, 'rgba(102,126,234,0.4)');
+  gradient.addColorStop(1, 'rgba(102,126,234,0)');
+
+  if (chartLine) chartLine.destroy();
+  chartLine = new Chart(ctx, {
+    type: 'line',
+    data: { labels, datasets: [{ label: 'Cumulative Spend', data: cumAmounts,
+            borderColor: '#667eea', backgroundColor: gradient, borderWidth: 2.5,
+            pointBackgroundColor: '#667eea', pointRadius: 4, pointHoverRadius: 6,
+            fill: true, tension: 0.4 }] },
+    options: { responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${fmt(c.raw)}` } } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 10 } } },
+        y: { grid: { color: 'rgba(255,255,255,0.06)' },
+             ticks: { callback: v => '฿' + v.toLocaleString() } } } }
+  });
+}
+
+// ─────────────────────────────
+//  Top Merchants
+// ─────────────────────────────
+async function loadMerchants() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/top-merchants?${buildQuery()}&limit=10`);
+  const data = await r.json();
+
+  const labels  = data.map(d => d.description.length > 28 ? d.description.slice(0,26)+'…' : d.description);
+  const amounts = data.map(d => d.total);
+  const colors  = data.map(d => CAT_COLORS[d.category] || '#b2bec3');
+
+  if (chartMerchants) chartMerchants.destroy();
+  chartMerchants = new Chart(qs('#chartMerchants').getContext('2d'), {
+    type: 'bar',
+    data: { labels, datasets: [{ label: 'Spend', data: amounts,
+            backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
+    options: { indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${fmt(c.raw)}` } } },
+      scales: {
+        x: { grid: { color: 'rgba(255,255,255,0.06)' },
+             ticks: { callback: v => '฿' + v.toLocaleString(), font: { size: 10 } } },
+        y: { grid: { display: false }, ticks: { font: { size: 10 } } } } }
+  });
+}
+
+// ─────────────────────────────
+//  Transaction Table — sort + pagination
+// ─────────────────────────────
+let allTransactions = [];
+let categories      = new Set();
+
+// Sort state
+let sortCol = 'post_date';
+let sortDir = 'desc';
+
+// Pagination state
+let currentPage = 1;
+let pageSize    = 20;
+
+// ── Sort helpers ──
+function sortData(data) {
+  return [...data].sort((a, b) => {
+    let va = a[sortCol] ?? '';
+    let vb = b[sortCol] ?? '';
+    let cmp;
+    if (sortCol === 'amount') {
+      cmp = Number(va) - Number(vb);
+    } else {
+      cmp = String(va).localeCompare(String(vb), undefined, { numeric: true });
+    }
+    return sortDir === 'asc' ? cmp : -cmp;
+  });
+}
+
+function updateSortHeaders() {
+  document.querySelectorAll('th.sortable').forEach(th => {
+    const icon = th.querySelector('.sort-icon');
+    const isActive = th.dataset.col === sortCol;
+    th.classList.toggle('col-sorted', isActive);
+    icon.textContent = isActive ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
+  });
+}
+
+// Wire sortable headers
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', () => {
+    const col = th.dataset.col;
+    if (sortCol === col) {
+      sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      sortCol = col;
+      sortDir = (col === 'amount') ? 'desc' : 'asc';
+    }
+    currentPage = 1;
+    updateSortHeaders();
+    renderTable();
+  });
+});
+
+// ── Pagination helpers ──
+function goPage(p) {
+  currentPage = p;
+  renderTable();
+  qs('.txn-table-wrap').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function setPageSize(n) {
+  pageSize    = n;
+  currentPage = 1;
+  renderTable();
+}
+
+function renderPagination(total) {
+  const bar = qs('#paginationBar');
+  const effectiveSize = pageSize === Infinity ? total : pageSize;
+  const totalPages    = Math.max(1, Math.ceil(total / effectiveSize));
+  const from = Math.min((currentPage - 1) * effectiveSize + 1, total);
+  const to   = Math.min(currentPage * effectiveSize, total);
+
+  // Page number list with ellipsis
+  const WING = 2;
+  const pages = [];
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages ||
+        (i >= currentPage - WING && i <= currentPage + WING)) {
+      pages.push(i);
+    } else if (pages[pages.length - 1] !== '…') {
+      pages.push('…');
+    }
+  }
+
+  const pgBtns = pages.map(p =>
+    p === '…'
+      ? `<span class="pg-ellipsis">…</span>`
+      : `<button class="pg-btn ${p === currentPage ? 'pg-active' : ''}"
+           onclick="goPage(${p})" ${p === currentPage ? 'disabled' : ''}>${p}</button>`
+  ).join('');
+
+  const sizeBtns = [10, 20, 50, 100, Infinity].map(n => {
+    const lbl  = n === Infinity ? 'All' : n;
+    const active = pageSize === n ? 'active' : '';
+    return `<button class="pg-size-btn ${active}" onclick="setPageSize(${n})">${lbl}</button>`;
+  }).join('');
+
+  bar.innerHTML = `
+    <div class="pg-info">
+      Showing <strong>${total ? from : 0}–${to}</strong> of <strong>${total}</strong>
+    </div>
+    <div class="pg-controls">
+      <button class="pg-btn" onclick="goPage(${currentPage - 1})"
+              ${currentPage === 1 ? 'disabled' : ''}>← Prev</button>
+      ${pgBtns}
+      <button class="pg-btn" onclick="goPage(${currentPage + 1})"
+              ${currentPage === totalPages ? 'disabled' : ''}>Next →</button>
+    </div>
+    <div class="pg-size-group">
+      <span class="pg-size-label">Rows:</span>${sizeBtns}
+    </div>`;
+}
+
+// ── Load & render ──
+async function loadTransactions() {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/transactions?${buildQuery()}`);
+  allTransactions = await r.json();
+  categories = new Set(allTransactions.map(t => t.category).filter(Boolean));
+
+  const sel = qs('#txnCategory');
+  const cur = sel.value;
+  sel.innerHTML = '<option value="all">All Categories</option>' +
+    [...categories].sort().map(c =>
+      `<option value="${c}">${CAT_ICONS[c] || ''} ${c}</option>`).join('');
+  if ([...categories].includes(cur)) sel.value = cur;
+
+  currentPage = 1;
+  renderTable();
+}
+
+function renderTable() {
+  const search = qs('#txnSearch').value.toLowerCase();
+  const cat    = qs('#txnCategory').value;
+
+  // 1. Filter
+  const filtered = allTransactions.filter(t => {
+    const matchCat  = cat === 'all' || t.category === cat;
+    const matchText = !search || (t.description || '').toLowerCase().includes(search);
+    return matchCat && matchText;
+  });
+
+  // 2. Sort
+  const sorted = sortData(filtered);
+
+  // 3. Paginate
+  const effectiveSize = pageSize === Infinity ? sorted.length : pageSize;
+  const totalPages    = Math.max(1, Math.ceil(sorted.length / effectiveSize));
+  currentPage = Math.min(currentPage, totalPages);
+  const slice = sorted.slice((currentPage - 1) * effectiveSize, currentPage * effectiveSize);
+
+  // 4. Count label
+  qs('#txnCount').textContent =
+    `${filtered.length} transaction${filtered.length !== 1 ? 's' : ''}`;
+
+  // 5. Render rows
+  const tbody = qs('#txnBody');
+  if (!slice.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="loading-row">
+      ${filtered.length ? 'No transactions on this page.' : 'No transactions found.'}
+    </td></tr>`;
+    renderPagination(0);
+    return;
+  }
+
+  tbody.innerHTML = slice.map(t => {
+    const color = CAT_COLORS[t.category] || '#b2bec3';
+    const icon  = CAT_ICONS[t.category]  || '📌';
+    const fxCell = t.foreign_currency
+      ? `<span class="fx-badge">${t.foreign_currency} ${Number(t.foreign_amount).toLocaleString()}</span>`
+      : '—';
+    const amtClass = t.is_credit ? 'text-teal' : '';
+    const amtSign  = t.is_credit ? '+ ' : '';
+    const stmtLabel = t.stmt_date
+      ? `<span class="stmt-tag">${t.stmt_date}</span>` : '—';
+
+    return `<tr class="${t.is_credit ? 'txn-credit' : ''}">
+      <td>${t.post_date  || '—'}</td>
+      <td>${t.trans_date || '—'}</td>
+      <td class="txn-desc">${t.description || '—'}</td>
+      <td><span class="cat-badge"
+            style="background:${color}22;color:${color};border:1px solid ${color}44">
+            ${icon} ${t.category}</span></td>
+      <td>${stmtLabel}</td>
+      <td>${fxCell}</td>
+      <td class="text-right ${amtClass}">
+        <strong>${amtSign}฿${Number(t.amount).toLocaleString('en-US', {minimumFractionDigits:2})}</strong>
+      </td>
+    </tr>`;
+  }).join('');
+
+  // 6. Render pagination
+  renderPagination(filtered.length);
+}
+
+// Reset page on filter change
+qs('#txnSearch').addEventListener('input',  () => { currentPage = 1; renderTable(); });
+qs('#txnCategory').addEventListener('change', () => { currentPage = 1; renderTable(); });
+
+// Init sort indicators
+updateSortHeaders();
+
+// ─────────────────────────────
+//  Bootstrap statement date bounds
+// ─────────────────────────────
+// Inject date_min / date_max per statement from server data
+// (already fetched server-side in account_dashboard route)
+// We need per-statement date bounds — fetch them once
+(async () => {
+  const r = await fetch(`/api/account/${ACCOUNT_NUM}/statements`);
+  const stmts = await r.json();
+  // Merge date_min/date_max back into ALL_STATEMENTS
+  stmts.forEach(s => {
+    const match = ALL_STATEMENTS.find(a => a.id === s.id);
+    if (match) { match.date_min = s.date_min; match.date_max = s.date_max; }
+  });
+  // Set initial date inputs
+  qs('#dateFrom').value = fromDate;
+  qs('#dateTo').value   = toDate;
+  updateActiveRange();
+})();
+
+// ─────────────────────────────
+//  Refresh all
+// ─────────────────────────────
+async function refreshAll() {
+  await Promise.all([
+    loadKPIs(), loadDonut(), loadBar(), loadLine(), loadMerchants(), loadTransactions()
+  ]);
+}
+
+refreshAll();
+</script>
+{% endblock %}
