@@ -43,6 +43,11 @@
         <div class="dh-stat-label">Reward Points</div>
         <div class="dh-stat-val text-teal">{{ '{:,}'.format(latest.rewards_points or 0) }}</div>
       </div>
+      <button class="btn btn-ghost btn-sm" id="recatBtn"
+              title="Re-apply current category rules to all transactions for this account"
+              onclick="runRecategorize()">
+        ↺ Recategorize
+      </button>
     </div>
   </div>
 
@@ -689,5 +694,64 @@ async function refreshAll() {
 }
 
 refreshAll();
+
+// ─────────────────────────────
+//  Recategorize
+// ─────────────────────────────
+async function runRecategorize() {
+  const btn = qs('#recatBtn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Recategorizing…';
+
+  try {
+    const r   = await fetch(`/api/account/${ACCOUNT_NUM}/recategorize`, { method: 'POST' });
+    const data = await r.json();
+
+    btn.innerHTML = `↺ Recategorize`;
+    btn.disabled = false;
+
+    // Show result as flash-style toast
+    showToast(
+      data.changed > 0
+        ? `✓ ${data.changed} of ${data.total} transactions recategorized`
+        : `✓ All ${data.total} transactions already up to date`,
+      data.changed > 0 ? 'success' : 'info'
+    );
+
+    if (data.changed > 0) await refreshAll();
+
+  } catch (err) {
+    btn.innerHTML = '↺ Recategorize';
+    btn.disabled = false;
+    showToast('Recategorization failed: ' + err.message, 'error');
+  }
+}
+
+function showToast(msg, type = 'info') {
+  const colors = {
+    success: 'rgba(85,239,196,0.15)',
+    info:    'rgba(102,126,234,0.15)',
+    error:   'rgba(255,107,107,0.15)',
+  };
+  const borders = {
+    success: 'rgba(85,239,196,0.3)',
+    info:    'rgba(102,126,234,0.3)',
+    error:   'rgba(255,107,107,0.3)',
+  };
+  const toast = document.createElement('div');
+  toast.className = 'flash';
+  toast.style.cssText = `background:${colors[type]};border-color:${borders[type]}`;
+  toast.innerHTML = `<span>${msg}</span>
+    <button class="flash-close" onclick="this.parentElement.remove()">×</button>`;
+
+  let container = qs('.flash-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'flash-container';
+    document.body.appendChild(container);
+  }
+  container.appendChild(toast);
+  setTimeout(() => toast.remove(), 5000);
+}
 </script>
 {% endblock %}

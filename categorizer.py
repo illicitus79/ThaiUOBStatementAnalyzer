@@ -1,3 +1,7 @@
+# -*- coding: utf-8 -*-
+import re
+
+# ── Hardcoded defaults (used as fallback & for initial DB seeding) ─────────
 # Ordered list: more specific rules first
 CATEGORY_RULES = [
     ('Payment / Refund', [
@@ -19,7 +23,7 @@ CATEGORY_RULES = [
     ('Health & Beauty', [
         'CLINIC', 'FITNESS', 'EVOLVE', 'HAIRDOCTOR', 'HOSPITAL', 'PHARMACY',
         'SALON', 'SPA', 'WATSONS', 'BOOTS', 'GUARDIAN', 'DENTAL', 'MEDILAB',
-        'HEALTH', 'BEAUTY', 'SKIN'
+        'HEALTH', 'BEAUTY', 'SKIN', 'PORNKASEM', 'SOMBOON', 'BIOTHALASSO'
     ]),
     ('Telecom & Utilities', [
         'AIS SERVICES', 'AMP*AIS', 'TRUE SERVICE', 'OMISE*TRUE', 'DTAC',
@@ -98,12 +102,62 @@ CATEGORY_COLORS = {
 }
 
 
+# ── DB-backed rules cache ───────────────────────────────────────────────────
+
+_rules_cache = None  # list of (category, keyword) tuples, ordered by priority
+
+
+def invalidate_rules_cache():
+    global _rules_cache
+    _rules_cache = None
+
+
+def _load_rules():
+    """Return ordered list of (category, keyword) from DB, falling back to hardcoded."""
+    global _rules_cache
+    if _rules_cache is not None:
+        return _rules_cache
+
+    try:
+        from database import get_db
+        db = get_db()
+        try:
+            rows = db.execute(
+                'SELECT category, keyword FROM category_rules ORDER BY category_order, id'
+            ).fetchall()
+        finally:
+            db.close()
+
+        if rows:
+            _rules_cache = [(r['category'], r['keyword']) for r in rows]
+            return _rules_cache
+    except Exception:
+        pass
+
+    # Fallback: flatten hardcoded rules
+    _rules_cache = [(cat, kw) for cat, keywords in CATEGORY_RULES for kw in keywords]
+    return _rules_cache
+
+
+def _match_keyword(keyword: str, desc_upper: str) -> bool:
+    """
+    Match a keyword against an uppercased description.
+    '*' acts as a wildcard (any characters), so 'GRAB*FOOD' matches 'GRAB EXPRESS FOOD'.
+    Plain keywords are matched as substrings.
+    """
+    kw = keyword.upper().strip()
+    if '*' in kw:
+        parts = [re.escape(p) for p in kw.split('*')]
+        pattern = '.*'.join(parts)
+        return bool(re.search(pattern, desc_upper))
+    return kw in desc_upper
+
+
 def categorize(description: str) -> str:
     if not description:
         return 'Other'
     desc_upper = description.upper()
-    for category, keywords in CATEGORY_RULES:
-        for kw in keywords:
-            if kw.upper() in desc_upper:
-                return category
+    for category, keyword in _load_rules():
+        if _match_keyword(keyword, desc_upper):
+            return category
     return 'Other'

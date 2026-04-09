@@ -50,7 +50,56 @@ def init_db():
             CREATE INDEX IF NOT EXISTS idx_txn_statement ON transactions(statement_id);
             CREATE INDEX IF NOT EXISTS idx_txn_post_date ON transactions(post_date);
             CREATE INDEX IF NOT EXISTS idx_txn_category ON transactions(category);
+
+            CREATE TABLE IF NOT EXISTS category_meta (
+                name TEXT PRIMARY KEY NOT NULL,
+                color TEXT NOT NULL DEFAULT '#b2bec3',
+                icon TEXT NOT NULL DEFAULT '📌',
+                sort_order INTEGER DEFAULT 999,
+                is_builtin INTEGER DEFAULT 0
+            );
+
+            CREATE TABLE IF NOT EXISTS category_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                category TEXT NOT NULL,
+                keyword TEXT NOT NULL,
+                category_order INTEGER DEFAULT 999
+            );
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_cat_kw_unique ON category_rules(UPPER(keyword));
         ''')
         conn.commit()
+        _seed_category_rules(conn)
     finally:
         conn.close()
+
+
+def _seed_category_rules(conn):
+    """Seed category_rules and category_meta from hardcoded defaults if empty."""
+    existing = conn.execute('SELECT COUNT(*) FROM category_rules').fetchone()[0]
+    if existing > 0:
+        return
+
+    from categorizer import CATEGORY_RULES, CATEGORY_COLORS, CATEGORY_ICONS
+
+    for sort_order, (category, keywords) in enumerate(CATEGORY_RULES):
+        color = CATEGORY_COLORS.get(category, '#b2bec3')
+        icon  = CATEGORY_ICONS.get(category, '📌')
+        conn.execute(
+            'INSERT OR IGNORE INTO category_meta (name, color, icon, sort_order, is_builtin) VALUES (?,?,?,?,1)',
+            (category, color, icon, sort_order)
+        )
+        for keyword in keywords:
+            conn.execute(
+                'INSERT OR IGNORE INTO category_rules (category, keyword, category_order) VALUES (?,?,?)',
+                (category, keyword, sort_order)
+            )
+
+    # Ensure "Other" meta entry exists
+    other_color = CATEGORY_COLORS.get('Other', '#b2bec3')
+    other_icon  = CATEGORY_ICONS.get('Other', '📌')
+    conn.execute(
+        'INSERT OR IGNORE INTO category_meta (name, color, icon, sort_order, is_builtin) VALUES (?,?,?,999,1)',
+        ('Other', other_color, other_icon)
+    )
+    conn.commit()

@@ -9,7 +9,8 @@ from werkzeug.utils import secure_filename
 
 from database import get_db, init_db
 from pdf_parser import parse_statement
-from categorizer import categorize, CATEGORY_COLORS, CATEGORY_ICONS
+from categorizer import (categorize, CATEGORY_COLORS, CATEGORY_ICONS,
+                         invalidate_rules_cache)
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -83,7 +84,19 @@ def index():
             ) g ON s.id = g.max_id
             ORDER BY s.uploaded_at DESC
         ''').fetchall()
-        return render_template('index.html', accounts=[dict(a) for a in accounts])
+        account_rows = [dict(a) for a in accounts]
+        summary = {
+            'account_count': len(account_rows),
+            'statement_total': sum((a.get('statement_count') or 0) for a in account_rows),
+            'total_balance': sum((a.get('total_balance') or 0) for a in account_rows),
+            'total_credit_line': sum((a.get('credit_line') or 0) for a in account_rows),
+            'total_rewards': sum((a.get('rewards_points') or 0) for a in account_rows),
+        }
+        summary['overall_util'] = (
+            round(summary['total_balance'] / summary['total_credit_line'] * 100, 1)
+            if summary['total_credit_line'] else 0
+        )
+        return render_template('index.html', accounts=account_rows, summary=summary)
     finally:
         db.close()
 
@@ -459,6 +472,271 @@ def api_transactions(account_num):
             ORDER BY t.post_date DESC, t.id DESC
         ''', params).fetchall()
         return jsonify([dict(r) for r in rows])
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────
+#  Recategorize
+# ──────────────────────────────────────────────
+
+def _do_recategorize(db, account_num=None):
+    """
+    Re-apply current categorizer rules to every transaction.
+    If account_num is given, only that account's transactions are updated.
+    Returns (total_checked, total_changed).
+    """
+    if account_num:
+        rows = db.execute(
+            'SELECT t.id, t.description, t.category '
+            'FROM transactions t '
+            'JOIN statements s ON t.statement_id = s.id '
+            'WHERE s.account_number = ?',
+            (account_num,)
+        ).fetchall()
+    else:
+        rows = db.execute(
+            'SELECT id, description, category FROM transactions'
+        ).fetchall()
+
+    changed = 0
+    for row in rows:
+        new_cat = categorize(row['description'])
+        if new_cat != row['category']:
+            db.execute('UPDATE transactions SET category = ? WHERE id = ?',
+                       (new_cat, row['id']))
+            changed += 1
+
+    db.commit()
+    return len(rows), changed
+
+
+@app.route('/api/account/<account_num>/recategorize', methods=['POST'])
+def api_recategorize_account(account_num):
+    """Recategorize all transactions for one account."""
+    db = get_db()
+    try:
+        total, changed = _do_recategorize(db, account_num)
+        return jsonify({'total': total, 'changed': changed, 'account': account_num})
+    finally:
+        db.close()
+
+
+@app.route('/api/recategorize', methods=['POST'])
+def api_recategorize_all():
+    """Recategorize every transaction across all accounts."""
+    db = get_db()
+    try:
+        total, changed = _do_recategorize(db)
+        return jsonify({'total': total, 'changed': changed})
+    finally:
+        db.close()
+
+
+# ──────────────────────────────────────────────
+#  Category Maintenance
+# ──────────────────────────────────────────────
+
+@app.route('/categories')
+def categories_page():
+    return render_template('categories.html')
+
+
+@app.route('/api/categories', methods=['GET'])
+def api_categories_get():
+    """Return all categories with their keywords."""
+    db = get_db()
+    try:
+        metas = db.execute(
+            'SELECT * FROM category_meta ORDER BY sort_order, name'
+        ).fetchall()
+        rules = db.execute(
+            'SELECT * FROM category_rules ORDER BY category_order, id'
+        ).fetchall()
+
+        kw_by_cat = {}
+        for r in rules:
+            kw_by_cat.setdefault(r['category'], []).append(dict(r))
+
+        result = []
+        for m in metas:
+            result.append({
+                **dict(m),
+                'keywords': kw_by_cat.get(m['name'], [])
+            })
+        # Include "Other" even if not in category_meta
+        names = {r['name'] for r in metas}
+        if 'Other' not in names:
+            result.append({
+                'name': 'Other', 'color': '#b2bec3', 'icon': '📌',
+                'sort_order': 999, 'is_builtin': 1, 'keywords': []
+            })
+        return jsonify(result)
+    finally:
+        db.close()
+
+
+@app.route('/api/categories', methods=['POST'])
+def api_category_create():
+    """Add a new category."""
+    data = request.get_json(force=True)
+    name  = (data.get('name') or '').strip()
+    color = data.get('color', '#b2bec3').strip()
+    icon  = data.get('icon', '📌').strip()
+    if not name:
+        return jsonify({'error': 'name is required'}), 400
+    if name.upper() == 'OTHER':
+        return jsonify({'error': '"Other" is a reserved category name'}), 400
+    db = get_db()
+    try:
+        max_order = db.execute('SELECT MAX(sort_order) FROM category_meta').fetchone()[0] or 0
+        db.execute(
+            'INSERT INTO category_meta (name, color, icon, sort_order, is_builtin) VALUES (?,?,?,?,0)',
+            (name, color, icon, max_order + 1)
+        )
+        db.commit()
+        invalidate_rules_cache()
+        return jsonify({'ok': True, 'name': name})
+    except Exception as exc:
+        db.rollback()
+        return jsonify({'error': str(exc)}), 400
+    finally:
+        db.close()
+
+
+@app.route('/api/categories/<path:cat_name>', methods=['PUT'])
+def api_category_update(cat_name):
+    """Update category metadata (color, icon)."""
+    data  = request.get_json(force=True)
+    color = data.get('color', '').strip()
+    icon  = data.get('icon', '').strip()
+    db = get_db()
+    try:
+        updates, vals = [], []
+        if color:
+            updates.append('color = ?'); vals.append(color)
+        if icon:
+            updates.append('icon = ?');  vals.append(icon)
+        if not updates:
+            return jsonify({'error': 'nothing to update'}), 400
+        vals.append(cat_name)
+        db.execute(f'UPDATE category_meta SET {", ".join(updates)} WHERE name = ?', vals)
+        db.commit()
+        return jsonify({'ok': True})
+    finally:
+        db.close()
+
+
+@app.route('/api/categories/<path:cat_name>', methods=['DELETE'])
+def api_category_delete(cat_name):
+    """Delete a user-defined category (and its keywords). Built-in categories are protected."""
+    if cat_name == 'Other':
+        return jsonify({'error': '"Other" cannot be deleted'}), 400
+    db = get_db()
+    try:
+        meta = db.execute('SELECT is_builtin FROM category_meta WHERE name = ?',
+                          (cat_name,)).fetchone()
+        if not meta:
+            return jsonify({'error': 'Category not found'}), 404
+        if meta['is_builtin']:
+            return jsonify({'error': 'Built-in categories cannot be deleted. Remove all their keywords instead.'}), 400
+        db.execute('DELETE FROM category_rules WHERE category = ?', (cat_name,))
+        db.execute('DELETE FROM category_meta WHERE name = ?', (cat_name,))
+        db.commit()
+        invalidate_rules_cache()
+        return jsonify({'ok': True})
+    finally:
+        db.close()
+
+
+@app.route('/api/categories/<path:cat_name>/keywords', methods=['POST'])
+def api_keyword_add(cat_name):
+    """Add a keyword to a category."""
+    data    = request.get_json(force=True)
+    keyword = (data.get('keyword') or '').strip()
+    if not keyword:
+        return jsonify({'error': 'keyword is required'}), 400
+
+    db = get_db()
+    try:
+        # Check for conflicts (same keyword already assigned to a different category)
+        conflict = db.execute(
+            'SELECT category FROM category_rules WHERE UPPER(keyword) = UPPER(?)',
+            (keyword,)
+        ).fetchone()
+        if conflict and conflict['category'] != cat_name:
+            return jsonify({
+                'error': f'Keyword already assigned to "{conflict["category"]}"',
+                'conflict_category': conflict['category']
+            }), 409
+
+        cat_order = db.execute(
+            'SELECT sort_order FROM category_meta WHERE name = ?', (cat_name,)
+        ).fetchone()
+        order = cat_order['sort_order'] if cat_order else 999
+
+        db.execute(
+            'INSERT OR IGNORE INTO category_rules (category, keyword, category_order) VALUES (?,?,?)',
+            (cat_name, keyword, order)
+        )
+        db.commit()
+        row = db.execute(
+            'SELECT * FROM category_rules WHERE UPPER(keyword) = UPPER(?)', (keyword,)
+        ).fetchone()
+        invalidate_rules_cache()
+        return jsonify(dict(row))
+    except Exception as exc:
+        db.rollback()
+        return jsonify({'error': str(exc)}), 400
+    finally:
+        db.close()
+
+
+@app.route('/api/keywords/<int:keyword_id>', methods=['DELETE'])
+def api_keyword_delete(keyword_id):
+    """Delete a single keyword rule by id."""
+    db = get_db()
+    try:
+        db.execute('DELETE FROM category_rules WHERE id = ?', (keyword_id,))
+        db.commit()
+        invalidate_rules_cache()
+        return jsonify({'ok': True})
+    finally:
+        db.close()
+
+
+@app.route('/api/keywords/conflicts')
+def api_keyword_conflicts():
+    """Return keywords that appear more than once (shouldn't happen with UNIQUE index, but check anyway)."""
+    db = get_db()
+    try:
+        rows = db.execute('''
+            SELECT UPPER(keyword) as kw_upper, GROUP_CONCAT(category, ' | ') as categories, COUNT(*) as cnt
+            FROM category_rules
+            GROUP BY UPPER(keyword)
+            HAVING cnt > 1
+        ''').fetchall()
+        return jsonify([dict(r) for r in rows])
+    finally:
+        db.close()
+
+
+@app.route('/api/categories/reset-defaults', methods=['POST'])
+def api_reset_defaults():
+    """Wipe all category rules and re-seed from hardcoded defaults."""
+    from database import _seed_category_rules
+    from categorizer import CATEGORY_RULES, CATEGORY_COLORS, CATEGORY_ICONS
+    db = get_db()
+    try:
+        db.execute('DELETE FROM category_rules')
+        db.execute('DELETE FROM category_meta')
+        db.commit()
+        _seed_category_rules(db)
+        invalidate_rules_cache()
+        return jsonify({'ok': True})
+    except Exception as exc:
+        db.rollback()
+        return jsonify({'error': str(exc)}), 500
     finally:
         db.close()
 

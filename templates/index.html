@@ -2,64 +2,281 @@
 {% block title %}UOB Statement Analyzer — Home{% endblock %}
 
 {% block content %}
+{% set account_count = summary.account_count %}
+{% set statement_total = summary.statement_total %}
+{% set total_balance = summary.total_balance %}
+{% set total_credit_line = summary.total_credit_line %}
+{% set total_rewards = summary.total_rewards %}
+{% set overall_util = summary.overall_util %}
 
-<!-- ── Hero / Upload ── -->
-<section class="hero">
-  <div class="hero-text">
-    <h1>Credit Card<br /><span class="gradient-text">Statement Analyzer</span></h1>
-    <p class="hero-sub">Upload your UOB PDF statements and get unified spending insights across all periods — beautifully categorized and charted.</p>
+<section class="hero hero-home">
+  <div class="hero-copy">
+    <div class="hero-kicker">UOB Credit Card Intelligence</div>
+    <h1>
+      Turn every statement into a
+      <span class="gradient-text">clean, visual spending story</span>
+    </h1>
+    <p class="hero-sub">
+      Upload UOB PDF statements, merge activity across billing periods, and surface balances,
+      spending categories, merchant behavior, and account health without touching spreadsheets.
+    </p>
+
+    <div class="hero-actions">
+      <a href="#upload-panel" class="btn btn-primary">Upload Statement</a>
+      <a href="{% if accounts %}#accounts-grid{% else %}#why-it-works{% endif %}" class="btn btn-ghost">Explore Highlights</a>
+    </div>
+
+    <div class="hero-stats">
+      <div class="hero-stat glass-card">
+        <span class="hero-stat-value">{{ account_count }}</span>
+        <span class="hero-stat-label">Tracked account{{ 's' if account_count != 1 else '' }}</span>
+      </div>
+      <div class="hero-stat glass-card">
+        <span class="hero-stat-value">{{ statement_total }}</span>
+        <span class="hero-stat-label">Imported statement{{ 's' if statement_total != 1 else '' }}</span>
+      </div>
+      <div class="hero-stat glass-card">
+        <span class="hero-stat-value">฿{{ '{:,.0f}'.format(total_balance) }}</span>
+        <span class="hero-stat-label">Latest combined balance</span>
+      </div>
+    </div>
   </div>
 
-  <div class="upload-card glass-card" id="uploadCard">
-    <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
-      <div class="drop-zone" id="dropZone">
-        <div class="drop-icon">
-          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="64" height="64" rx="32" fill="url(#grad)"/>
-            <path d="M32 20v16M24 28l8-8 8 8" stroke="#fff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 44h24" stroke="#fff" stroke-width="2.5" stroke-linecap="round"/>
-            <defs><linearGradient id="grad" x1="0" y1="0" x2="64" y2="64"><stop stop-color="#667eea"/><stop offset="1" stop-color="#764ba2"/></linearGradient></defs>
-          </svg>
-        </div>
-        <p class="drop-title">Drop your PDF statement here</p>
-        <p class="drop-sub">Supports multiple statements per account — duplicates are detected automatically</p>
-        <input type="file" name="pdf_file" id="pdfInput" accept=".pdf" required hidden />
-        <div class="drop-filename" id="dropFilename" style="display:none;"></div>
+  <div class="hero-stage">
+    <article class="hero-visual glass-card">
+      <div class="hero-visual-image-wrap">
+        <img
+          src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?auto=format&fit=crop&w=1400&q=80"
+          alt="Analytics dashboard on a laptop screen"
+          class="hero-visual-image"
+        />
       </div>
-      <button type="submit" class="btn btn-primary btn-full" id="uploadBtn" disabled>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Analyze Statement
-      </button>
-    </form>
-    <div class="upload-hints">
-      <span class="hint"><span class="hint-dot green"></span>Duplicate detection</span>
-      <span class="hint"><span class="hint-dot blue"></span>Multi-statement accounts</span>
-      <span class="hint"><span class="hint-dot purple"></span>Instant insights</span>
+      <div class="hero-visual-content">
+        <div class="eyebrow-chip">Live insight layer</div>
+        <h2>One place for balances, categories, and merchant patterns.</h2>
+        <p>
+          The landing view now frames the app like a financial workspace instead of a file drop.
+          Upload is still the primary action, but the page also communicates what the analysis delivers.
+        </p>
+        <div class="hero-credit">
+          Photo by
+          <a href="https://unsplash.com/@lukechesser" target="_blank" rel="noreferrer">Luke Chesser</a>
+          on
+          <a href="https://unsplash.com/s/photos/finance-dashboard" target="_blank" rel="noreferrer">Unsplash</a>
+        </div>
+      </div>
+    </article>
+
+    <div class="hero-floating-stack">
+      <article class="insight-card glass-card">
+        <div class="insight-card-head">
+          <span class="eyebrow-chip eyebrow-chip-alt">Portfolio pulse</span>
+          <span class="insight-dot"></span>
+        </div>
+        <div class="insight-grid">
+          <div>
+            <div class="insight-label">Overall utilization</div>
+            <div class="insight-value">{{ overall_util|round(1) }}%</div>
+          </div>
+          <div>
+            <div class="insight-label">Reward points</div>
+            <div class="insight-value">{{ '{:,}'.format(total_rewards) }}</div>
+          </div>
+          <div>
+            <div class="insight-label">Credit line</div>
+            <div class="insight-value">฿{{ '{:,.0f}'.format(total_credit_line) }}</div>
+          </div>
+          <div>
+            <div class="insight-label">Duplicate guard</div>
+            <div class="insight-value">On</div>
+          </div>
+        </div>
+      </article>
+
+      <article class="micro-timeline glass-card">
+        <div class="micro-timeline-title">Workflow</div>
+        <div class="timeline-step">
+          <span class="timeline-index">01</span>
+          <div>
+            <strong>Drop in a PDF</strong>
+            <p>The parser reads statement metadata and transactions.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <span class="timeline-index">02</span>
+          <div>
+            <strong>Merge account history</strong>
+            <p>Statements stack under the same account automatically.</p>
+          </div>
+        </div>
+        <div class="timeline-step">
+          <span class="timeline-index">03</span>
+          <div>
+            <strong>Explore insights</strong>
+            <p>Dashboards surface categories, trends, and merchant leaders.</p>
+          </div>
+        </div>
+      </article>
     </div>
   </div>
 </section>
 
-<!-- ── Accounts Grid ── -->
+<section class="trust-ribbon glass-card">
+  <div class="trust-item">
+    <span class="trust-title">Duplicate-aware uploads</span>
+    <span class="trust-copy">Prevent repeat imports with file hashing.</span>
+  </div>
+  <div class="trust-item">
+    <span class="trust-title">Cross-period rollups</span>
+    <span class="trust-copy">Keep a continuous view of account activity.</span>
+  </div>
+  <div class="trust-item">
+    <span class="trust-title">Category control</span>
+    <span class="trust-copy">Refine rules when merchant naming gets messy.</span>
+  </div>
+</section>
+
+<section class="home-grid">
+  <article class="upload-card glass-card" id="upload-panel">
+    <div class="panel-intro">
+      <span class="eyebrow-chip">Start here</span>
+      <h2 class="panel-title">Upload your next UOB statement</h2>
+      <p class="panel-copy">
+        Drop a PDF and the app will parse the statement, classify transactions, and attach it to the correct account.
+      </p>
+    </div>
+
+    <form action="{{ url_for('upload') }}" method="POST" enctype="multipart/form-data" id="uploadForm">
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-icon">
+          <svg viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="64" height="64" rx="22" fill="url(#grad)"/>
+            <path d="M32 17v19M24 25l8-8 8 8" stroke="#08202f" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M18 45h28" stroke="#08202f" stroke-width="2.8" stroke-linecap="round"/>
+            <defs>
+              <linearGradient id="grad" x1="0" y1="0" x2="64" y2="64">
+                <stop stop-color="#ffd27a"/>
+                <stop offset="1" stop-color="#76dfd0"/>
+              </linearGradient>
+            </defs>
+          </svg>
+        </div>
+        <p class="drop-title">Drop your PDF statement here</p>
+        <p class="drop-sub">One file at a time, with duplicate detection and account grouping built in.</p>
+        <input type="file" name="pdf_file" id="pdfInput" accept=".pdf" required hidden />
+        <div class="drop-filename" id="dropFilename" style="display:none;"></div>
+      </div>
+      <button type="submit" class="btn btn-primary btn-full" id="uploadBtn" disabled>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="17 8 12 3 7 8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+        Analyze Statement
+      </button>
+    </form>
+
+    <div class="upload-hints">
+      <span class="hint"><span class="hint-dot green"></span>Duplicate detection</span>
+      <span class="hint"><span class="hint-dot blue"></span>Multi-statement accounts</span>
+      <span class="hint"><span class="hint-dot gold"></span>Instant insights</span>
+    </div>
+  </article>
+
+  <div class="home-side-stack">
+    <article class="story-card glass-card" id="why-it-works">
+      <div class="panel-intro">
+        <span class="eyebrow-chip eyebrow-chip-alt">What improves</span>
+        <h2 class="panel-title">A homepage that explains the product, not just the input field.</h2>
+      </div>
+      <div class="feature-list">
+        <div class="feature-item">
+          <div class="feature-icon">01</div>
+          <div>
+            <h3>Clear first action</h3>
+            <p>The upload zone stays prominent, but it now sits inside a fuller product narrative.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">02</div>
+          <div>
+            <h3>Financial editorial feel</h3>
+            <p>Photography, stronger type, warmer accents, and layered surfaces make the app feel more premium.</p>
+          </div>
+        </div>
+        <div class="feature-item">
+          <div class="feature-icon">03</div>
+          <div>
+            <h3>Faster scanning</h3>
+            <p>Key benefits, workflow, and account summary are visible before users commit to a click.</p>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <article class="story-card glass-card">
+      <div class="panel-intro">
+        <span class="eyebrow-chip">What you get</span>
+        <h2 class="panel-title">A quick read on spending behavior.</h2>
+      </div>
+      <div class="preview-metrics">
+        <div class="preview-metric">
+          <span class="preview-metric-label">Category mix</span>
+          <strong>Dining, travel, groceries, recurring bills</strong>
+        </div>
+        <div class="preview-metric">
+          <span class="preview-metric-label">Merchant concentration</span>
+          <strong>See where spending clusters quickly</strong>
+        </div>
+        <div class="preview-metric">
+          <span class="preview-metric-label">Account health</span>
+          <strong>Balance, credit line, utilization, rewards</strong>
+        </div>
+      </div>
+    </article>
+  </div>
+</section>
+
 {% if accounts %}
+<section class="portfolio-banner glass-card">
+  <div>
+    <div class="portfolio-label">Current portfolio snapshot</div>
+    <h2 class="portfolio-title">Your imported accounts are ready to drill into.</h2>
+  </div>
+  <div class="portfolio-metrics">
+    <div>
+      <span>Accounts</span>
+      <strong>{{ account_count }}</strong>
+    </div>
+    <div>
+      <span>Statements</span>
+      <strong>{{ statement_total }}</strong>
+    </div>
+    <div>
+      <span>Utilization</span>
+      <strong>{{ overall_util|round(1) }}%</strong>
+    </div>
+  </div>
+</section>
+
 <section class="accounts-section">
   <div class="section-header">
     <h2 class="section-title">Your <span class="gradient-text">Accounts</span></h2>
     <p class="section-sub">
-      {{ accounts|length }} account{{ 's' if accounts|length != 1 else '' }}
-      &nbsp;·&nbsp;
-      {{ accounts|sum(attribute='statement_count') }} statement{{ 's' if accounts|sum(attribute='statement_count') != 1 else '' }} total
+      {{ account_count }} account{{ 's' if account_count != 1 else '' }}
+      ·
+      {{ statement_total }} statement{{ 's' if statement_total != 1 else '' }}
+      ·
+      Click any card to open its dashboard
     </p>
   </div>
 
-  <div class="cards-grid">
+  <div class="cards-grid" id="accounts-grid">
     {% for acc in accounts %}
     <div class="card-wrapper" onclick="window.location='{{ url_for('account_dashboard', account_num=acc.account_number) }}'">
-
-      <!-- Credit Card Visual -->
       <div class="credit-card {% if 'WORLD' in (acc.card_type or '') %}card-world{% elif 'PLATINUM' in (acc.card_type or '') %}card-platinum{% else %}card-default{% endif %}">
         <div class="cc-shimmer"></div>
 
-        <!-- Statement count badge -->
         <div class="cc-stmt-badge">
           {{ acc.statement_count }} statement{{ 's' if acc.statement_count != 1 else '' }}
         </div>
@@ -95,7 +312,6 @@
         </div>
       </div>
 
-      <!-- Info Panel -->
       <div class="card-info-panel glass-card">
         <div class="cip-row">
           <div class="cip-stat">
@@ -108,7 +324,7 @@
           </div>
           <div class="cip-stat">
             <div class="cip-label">Reward Points</div>
-            <div class="cip-value" style="color:var(--accent-teal)">{{ '{:,}'.format(acc.rewards_points or 0) }}</div>
+            <div class="cip-value cip-value-accent">{{ '{:,}'.format(acc.rewards_points or 0) }}</div>
           </div>
         </div>
 
@@ -125,8 +341,7 @@
         </div>
 
         <div class="cip-actions">
-          <a href="{{ url_for('account_dashboard', account_num=acc.account_number) }}"
-             class="btn btn-primary btn-sm">
+          <a href="{{ url_for('account_dashboard', account_num=acc.account_number) }}" class="btn btn-primary btn-sm">
             View Dashboard
           </a>
           <span class="cip-meta">{{ acc.statement_count }} statement{{ 's' if acc.statement_count != 1 else '' }} uploaded</span>
@@ -137,13 +352,32 @@
   </div>
 </section>
 {% else %}
-<section class="empty-state">
-  <div class="empty-icon">📊</div>
-  <h3>No Accounts Yet</h3>
-  <p>Upload your first UOB credit card PDF statement above to see spending insights.</p>
+<section class="empty-showcase">
+  <article class="empty-state glass-card">
+    <div class="empty-icon">▣</div>
+    <h3>No accounts yet</h3>
+    <p>Import your first PDF above and this page will turn into a live overview of every UOB account you track.</p>
+  </article>
+
+  <div class="sample-grid">
+    <article class="sample-card glass-card">
+      <span class="sample-label">After upload</span>
+      <strong>Account cards</strong>
+      <p>Each account gets a visual summary with balance, limit, rewards, and statement history.</p>
+    </article>
+    <article class="sample-card glass-card">
+      <span class="sample-label">Inside dashboard</span>
+      <strong>Category and merchant analysis</strong>
+      <p>Break spending into categories, trends, and merchant concentration without manual cleanup.</p>
+    </article>
+    <article class="sample-card glass-card">
+      <span class="sample-label">Data hygiene</span>
+      <strong>Consistent imports</strong>
+      <p>Duplicate detection protects the history view when the same statement is uploaded twice.</p>
+    </article>
+  </div>
 </section>
 {% endif %}
-
 {% endblock %}
 
 {% block scripts %}
@@ -157,17 +391,27 @@ dropZone.addEventListener('click', () => pdfInput.click());
 dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('dragging'); });
 dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragging'));
 dropZone.addEventListener('drop', e => {
-  e.preventDefault(); dropZone.classList.remove('dragging');
+  e.preventDefault();
+  dropZone.classList.remove('dragging');
   const file = e.dataTransfer.files[0];
-  if (file && file.name.toLowerCase().endsWith('.pdf')) { pdfInput.files = e.dataTransfer.files; setFile(file.name); }
+  if (file && file.name.toLowerCase().endsWith('.pdf')) {
+    pdfInput.files = e.dataTransfer.files;
+    setFile(file.name);
+  }
 });
-pdfInput.addEventListener('change', () => { if (pdfInput.files[0]) setFile(pdfInput.files[0].name); });
+pdfInput.addEventListener('change', () => {
+  if (pdfInput.files[0]) {
+    setFile(pdfInput.files[0].name);
+  }
+});
 
 function setFile(name) {
-  dropFilename.textContent = '📄 ' + name;
+  dropFilename.textContent = 'PDF ready: ' + name;
   dropFilename.style.display = 'block';
+  dropZone.classList.add('has-file');
   uploadBtn.disabled = false;
 }
+
 document.getElementById('uploadForm').addEventListener('submit', () => {
   uploadBtn.innerHTML = '<span class="spinner"></span> Analyzing…';
   uploadBtn.disabled = true;
