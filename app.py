@@ -56,6 +56,22 @@ def _account_base(account_num, params):
     )
 
 
+def _parse_loose_date(value):
+    """Parse either ISO dates or statement-style dates like '31 Mar 2026'."""
+    if not value:
+        return None
+    if isinstance(value, date_type):
+        return value
+
+    text = str(value).strip()
+    for fmt in ('%Y-%m-%d', '%d %b %Y', '%d %B %Y'):
+        try:
+            return datetime.strptime(text, fmt).date()
+        except ValueError:
+            continue
+    return None
+
+
 # ──────────────────────────────────────────────
 #  Pages
 # ──────────────────────────────────────────────
@@ -375,6 +391,20 @@ def api_summary(account_num):
         if stmt_row and stmt_row['credit_line']:
             credit_pct = round(stmt_row['total_balance'] / stmt_row['credit_line'] * 100, 1)
 
+        selected_stmt_date = _parse_loose_date(stmt_row['statement_date']) if stmt_row else None
+        selected_due_date = _parse_loose_date(stmt_row['payment_due_date']) if stmt_row else None
+        current_balance = round(stmt_row['total_balance'] or 0, 2) if stmt_row else 0
+        credit_line = round(stmt_row['credit_line'] or 0, 2) if stmt_row else 0
+        minimum_payment = round(stmt_row['minimum_payment'] or 0, 2) if stmt_row else 0
+        credit_headroom = round(max(0, credit_line - current_balance), 2) if stmt_row else 0
+        min_payment_ratio = round((minimum_payment / current_balance) * 100, 1) if current_balance else 0
+        days_until_due = None
+        statement_window_days = None
+        if selected_due_date:
+            days_until_due = (selected_due_date - datetime.now().date()).days
+        if selected_stmt_date and selected_due_date:
+            statement_window_days = (selected_due_date - selected_stmt_date).days
+
         # ── Previous period comparison ──
         all_stmts = db.execute(
             'SELECT id FROM statements WHERE account_number = ? ORDER BY statement_date DESC',
@@ -442,6 +472,15 @@ def api_summary(account_num):
             'days_in_period':         days,
             'date_from':              d_min or date_from or '',
             'date_to':                d_max or date_to or '',
+            'statement_date':         stmt_row['statement_date'] if stmt_row else '',
+            'payment_due_date':       stmt_row['payment_due_date'] if stmt_row else '',
+            'current_balance':        current_balance,
+            'credit_line':            credit_line,
+            'minimum_payment':        minimum_payment,
+            'credit_headroom':        credit_headroom,
+            'min_payment_ratio':      min_payment_ratio,
+            'days_until_due':         days_until_due,
+            'statement_window_days':  statement_window_days,
             'has_prev':               has_prev,
             'prev_total_spend':       prev_total,
             'prev_transaction_count': prev_count,

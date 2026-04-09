@@ -93,6 +93,17 @@ body::before {
   overflow: hidden;
 }
 
+/* Dashboard tooltips need to escape card bounds. */
+.dashboard .glass-card,
+.dashboard .kpi-card,
+.dashboard .chart-card,
+.dashboard .analysis-card,
+.dashboard .comparison-card,
+.dashboard .txn-section,
+.dashboard .recurring-section {
+  overflow: visible;
+}
+
 /* ── Navbar ── */
 .navbar {
   display: flex;
@@ -1019,6 +1030,70 @@ body::before {
 .kpi-value { font-size: 26px; font-weight: 700; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .kpi-small { font-size: 17px; }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.title-row .chart-title { margin-bottom: 0; }
+
+.info-tip {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.12);
+  color: var(--text-2);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  cursor: help;
+  flex-shrink: 0;
+  vertical-align: middle;
+  z-index: 40;
+}
+
+.info-tip::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 10px);
+  transform: translateX(-50%) translateY(4px);
+  min-width: 220px;
+  max-width: 280px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: rgba(5, 15, 24, 0.96);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: var(--text-2);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  pointer-events: none;
+  z-index: 60;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.info-tip:hover::after,
+.info-tip:focus-visible::after {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.info-tip:focus-visible {
+  outline: 2px solid rgba(118,223,208,0.45);
+  outline-offset: 2px;
+}
+
 /* ── Charts ── */
 .chart-row {
   display: grid;
@@ -1295,6 +1370,88 @@ th .sort-icon {
 .danger  { color: var(--danger); }
 .warning { color: var(--warning); }
 
+.insight-mini-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.insight-mini-card {
+  padding: 18px 20px;
+}
+
+.insight-mini-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+
+.insight-mini-value {
+  font-size: 26px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin-bottom: 6px;
+}
+
+.insight-mini-sub {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+}
+
+.analysis-card {
+  padding: 24px;
+}
+
+.analysis-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.analysis-kpi {
+  padding: 16px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.analysis-kpi-label {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-bottom: 8px;
+}
+
+.analysis-kpi-value {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  margin-bottom: 6px;
+}
+
+.analysis-kpi-value-list {
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+.analysis-kpi-sub {
+  font-size: 12px;
+  color: var(--text-3);
+  line-height: 1.5;
+}
+
 /* ── Burn Rate Banner ── */
 .burn-card {
   padding: 22px 28px;
@@ -1511,6 +1668,92 @@ th .sort-icon {
   padding: 2px 7px;
   white-space: nowrap;
   font-family: monospace;
+  color: var(--text-3);
+}
+
+.comparison-card {
+  padding: 24px;
+}
+
+.comparison-top-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.comparison-pill {
+  padding: 16px 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.comparison-pill span,
+.comparison-pill small,
+.comparison-block-title {
+  display: block;
+}
+
+.comparison-pill span {
+  font-size: 11px;
+  color: var(--text-3);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.comparison-pill strong {
+  font-size: 24px;
+  line-height: 1.1;
+}
+
+.comparison-pill small {
+  margin-top: 6px;
+  color: var(--text-3);
+  font-size: 12px;
+}
+
+.comparison-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 18px;
+}
+
+.comparison-block {
+  padding: 18px;
+  border-radius: 18px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+}
+
+.comparison-block-title {
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 12px;
+}
+
+.comparison-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  font-size: 13px;
+}
+
+.comparison-row:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.comparison-row span:last-child {
+  text-align: right;
+  color: var(--text-2);
+}
+
+.comparison-empty-text {
+  font-size: 13px;
   color: var(--text-3);
 }
 
@@ -1786,6 +2029,10 @@ th .sort-icon {
   .chart-row { grid-template-columns: 1fr; }
   .chart-row-insights { grid-template-columns: 1fr; }
   .chart-row-2col { grid-template-columns: 1fr; }
+  .insight-mini-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .analysis-grid { grid-template-columns: 1fr; }
+  .comparison-top-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .comparison-grid { grid-template-columns: 1fr; }
   .hero { grid-template-columns: 1fr; }
   .home-grid { grid-template-columns: 1fr; }
   .trust-ribbon { grid-template-columns: 1fr; }
@@ -1799,6 +2046,7 @@ th .sort-icon {
   .hero-stats { grid-template-columns: 1fr; }
   .hero-floating-stack { grid-template-columns: 1fr; }
   .portfolio-metrics { width: 100%; }
+  .analysis-kpi-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 768px) {
@@ -1817,6 +2065,7 @@ th .sort-icon {
   .dh-right { flex-direction: row; gap: 16px; }
   .cip-row { grid-template-columns: 1fr 1fr; }
   .portfolio-metrics { grid-template-columns: 1fr; }
+  .credits-summary { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 480px) {
@@ -1828,4 +2077,9 @@ th .sort-icon {
   .btn { justify-content: center; }
   .insight-grid { grid-template-columns: 1fr; }
   .cip-row { grid-template-columns: 1fr; }
+  .insight-mini-grid { grid-template-columns: 1fr; }
+  .comparison-top-grid { grid-template-columns: 1fr; }
+  .info-tip::after { left: auto; right: 0; transform: translateY(4px); }
+  .info-tip:hover::after,
+  .info-tip:focus-visible::after { transform: translateY(0); }
 }

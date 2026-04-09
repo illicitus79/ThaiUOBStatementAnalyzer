@@ -105,7 +105,7 @@
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#ff6b6b,#ee5a24)">฿</div>
       <div class="kpi-body">
-        <div class="kpi-label">Total Spend</div>
+        <div class="kpi-label">Total Spend <span class="info-tip" tabindex="0" data-tooltip="Total purchase spending in the selected range, excluding credits and refunds.">?</span></div>
         <div class="kpi-value" id="kpiTotal">—</div>
         <div class="kpi-trend" id="kpiTotalTrend"></div>
       </div>
@@ -113,7 +113,7 @@
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#a29bfe,#6c5ce7)">#</div>
       <div class="kpi-body">
-        <div class="kpi-label">Transactions</div>
+        <div class="kpi-label">Transactions <span class="info-tip" tabindex="0" data-tooltip="Count of purchase transactions in the selected range.">?</span></div>
         <div class="kpi-value" id="kpiCount">—</div>
         <div class="kpi-trend" id="kpiCountTrend"></div>
       </div>
@@ -121,29 +121,29 @@
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#55efc4,#00b894)">⌀</div>
       <div class="kpi-body">
-        <div class="kpi-label">Daily Average</div>
+        <div class="kpi-label">Daily Average <span class="info-tip" tabindex="0" data-tooltip="Average purchase spend per day across the active period covered by the current filter.">?</span></div>
         <div class="kpi-value" id="kpiAvgDaily">—</div>
         <div class="kpi-trend" id="kpiAvgDailyTrend"></div>
       </div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#fdcb6e,#e17055)">★</div>
-      <div class="kpi-body"><div class="kpi-label">Top Category</div><div class="kpi-value kpi-small" id="kpiTopCat">—</div></div>
+      <div class="kpi-body"><div class="kpi-label">Top Category <span class="info-tip" tabindex="0" data-tooltip="The category with the highest spend in the selected range.">?</span></div><div class="kpi-value kpi-small" id="kpiTopCat">—</div></div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#74b9ff,#0984e3)">↑</div>
-      <div class="kpi-body"><div class="kpi-label">Largest Transaction</div><div class="kpi-value" id="kpiMax">—</div></div>
+      <div class="kpi-body"><div class="kpi-label">Largest Transaction <span class="info-tip" tabindex="0" data-tooltip="The single highest-value purchase transaction in the selected range.">?</span></div><div class="kpi-value" id="kpiMax">—</div></div>
     </div>
     <div class="kpi-card glass-card">
       <div class="kpi-icon" style="background:linear-gradient(135deg,#fd79a8,#e84393)">%</div>
-      <div class="kpi-body"><div class="kpi-label">Credit Utilization</div><div class="kpi-value" id="kpiUtil">—</div></div>
+      <div class="kpi-body"><div class="kpi-label">Credit Utilization <span class="info-tip" tabindex="0" data-tooltip="Current balance divided by credit line on the selected or latest statement. Lower is generally healthier.">?</span></div><div class="kpi-value" id="kpiUtil">—</div></div>
     </div>
   </div>
 
   <!-- ── Burn Rate Banner ── -->
   <div class="glass-card burn-card" id="burnCard">
     <div class="burn-block">
-      <div class="burn-label">⏱ Period Progress</div>
+      <div class="burn-label">⏱ Period Progress <span class="info-tip" tabindex="0" data-tooltip="How much of the selected statement or date range has elapsed.">?</span></div>
       <div class="burn-value" id="burnDayVal">—</div>
       <div class="burn-bar-track">
         <div class="burn-bar-fill burn-bar-days" id="burnDayBar" style="width:0%"></div>
@@ -151,7 +151,7 @@
       <div class="burn-sub" id="burnDaySub"></div>
     </div>
     <div class="burn-block">
-      <div class="burn-label">💳 Spend Pace</div>
+      <div class="burn-label">💳 Spend Pace <span class="info-tip" tabindex="0" data-tooltip="Current spending compared with the previous statement or prior pace baseline.">?</span></div>
       <div class="burn-value" id="burnSpendVal">—</div>
       <div class="burn-bar-track">
         <div class="burn-bar-fill" id="burnSpendBar" style="width:0%"></div>
@@ -159,21 +159,164 @@
       <div class="burn-sub" id="burnSpendSub"></div>
     </div>
     <div class="burn-block">
-      <div class="burn-label">📅 Daily Rate</div>
+      <div class="burn-label">📅 Daily Rate <span class="info-tip" tabindex="0" data-tooltip="Average purchase spend per elapsed day in the selected period.">?</span></div>
       <div class="burn-value" id="burnRateVal">—</div>
       <div class="burn-sub" id="burnRateSub"></div>
     </div>
     <div class="burn-projected">
-      <div class="burn-proj-label">Projected Total</div>
+      <div class="burn-proj-label">Projected Total <span class="info-tip" tabindex="0" data-tooltip="Estimated end-of-period spend if the current pace continues.">?</span></div>
       <div class="burn-proj-val" id="burnProjVal">—</div>
       <div class="burn-proj-note" id="burnProjNote"></div>
+    </div>
+  </div>
+
+  <!-- ── Additional Snapshot Metrics ── -->
+  <div class="insight-mini-grid">
+    <div class="glass-card insight-mini-card">
+      <div class="insight-mini-label">Net Spend <span class="info-tip" tabindex="0" data-tooltip="Purchase spend minus credits and refunds in the selected range.">?</span></div>
+      <div class="insight-mini-value" id="miniNetSpend">—</div>
+      <div class="insight-mini-sub" id="miniRefundRate">—</div>
+    </div>
+    <div class="glass-card insight-mini-card">
+      <div class="insight-mini-label">Unique Merchants <span class="info-tip" tabindex="0" data-tooltip="Distinct merchant descriptions seen in the selected purchase transactions.">?</span></div>
+      <div class="insight-mini-value" id="miniMerchants">—</div>
+      <div class="insight-mini-sub" id="miniMerchantDensity">—</div>
+    </div>
+    <div class="glass-card insight-mini-card">
+      <div class="insight-mini-label">Active Days <span class="info-tip" tabindex="0" data-tooltip="Number of days with at least one purchase transaction in the selected range.">?</span></div>
+      <div class="insight-mini-value" id="miniActiveDays">—</div>
+      <div class="insight-mini-sub" id="miniActiveRate">—</div>
+    </div>
+    <div class="glass-card insight-mini-card">
+      <div class="insight-mini-label">Foreign Spend Share <span class="info-tip" tabindex="0" data-tooltip="Share of purchase spend tied to transactions with an original foreign-currency amount.">?</span></div>
+      <div class="insight-mini-value" id="miniFxShare">—</div>
+      <div class="insight-mini-sub" id="miniFxSpend">—</div>
+    </div>
+  </div>
+
+  <!-- ── Analytical Summary Panels ── -->
+  <div class="analysis-grid">
+    <div class="glass-card analysis-card">
+      <div class="title-row">
+        <div class="chart-title">Payment Pressure</div>
+        <span class="info-tip" tabindex="0" data-tooltip="Credit-health metrics derived from the selected or latest statement: available headroom, minimum payment burden, and due-date timing.">?</span>
+      </div>
+      <div class="analysis-kpi-grid">
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Available Headroom</div>
+          <div class="analysis-kpi-value" id="payHeadroom">—</div>
+          <div class="analysis-kpi-sub" id="payHeadroomSub"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Min Payment Ratio</div>
+          <div class="analysis-kpi-value" id="payMinRatio">—</div>
+          <div class="analysis-kpi-sub" id="payMinRatioSub"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Due In</div>
+          <div class="analysis-kpi-value" id="payDueDays">—</div>
+          <div class="analysis-kpi-sub" id="payDueDate"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Statement Window</div>
+          <div class="analysis-kpi-value" id="payWindowDays">—</div>
+          <div class="analysis-kpi-sub" id="payPressureBadge"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card analysis-card">
+      <div class="title-row">
+        <div class="chart-title">Spend Concentration</div>
+        <span class="info-tip" tabindex="0" data-tooltip="Shows how concentrated spending is in a few categories or merchants. High concentration means a small number of merchants or categories drive most spend.">?</span>
+      </div>
+      <div class="analysis-kpi-grid">
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Top Category Share</div>
+          <div class="analysis-kpi-value" id="concTopCatShare">—</div>
+          <div class="analysis-kpi-sub" id="concTopCatName"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Top Merchant Share</div>
+          <div class="analysis-kpi-value" id="concTopMerchantShare">—</div>
+          <div class="analysis-kpi-sub" id="concTopMerchantName"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Top 5 Merchants</div>
+          <div class="analysis-kpi-value" id="concTopFiveShare">—</div>
+          <div class="analysis-kpi-sub" id="concMerchantSpread"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Avg Ticket Size</div>
+          <div class="analysis-kpi-value" id="concAvgTicket">—</div>
+          <div class="analysis-kpi-sub" id="concTxnPerMerchant"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card analysis-card">
+      <div class="title-row">
+        <div class="chart-title">Spend Mix</div>
+        <span class="info-tip" tabindex="0" data-tooltip="A higher-level view of where money goes: essential categories, discretionary categories, early-vs-late-cycle timing, and weekend behavior.">?</span>
+      </div>
+      <div class="analysis-kpi-grid">
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Essential Share</div>
+          <div class="analysis-kpi-value" id="mixEssentialShare">—</div>
+          <div class="analysis-kpi-sub" id="mixEssentialSpend"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Discretionary Share</div>
+          <div class="analysis-kpi-value" id="mixDiscretionaryShare">—</div>
+          <div class="analysis-kpi-sub" id="mixDiscretionarySpend"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Early-Cycle Share</div>
+          <div class="analysis-kpi-value" id="mixEarlyShare">—</div>
+          <div class="analysis-kpi-sub" id="mixEarlyLateSub"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Weekend Share</div>
+          <div class="analysis-kpi-value" id="mixWeekendShare">—</div>
+          <div class="analysis-kpi-sub" id="mixWeekendSpend"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card analysis-card">
+      <div class="title-row">
+        <div class="chart-title">Recurring Burden</div>
+        <span class="info-tip" tabindex="0" data-tooltip="Recurring merchants are descriptions that appear across multiple statements. This panel estimates how much of spending is tied to repeating charges.">?</span>
+      </div>
+      <div class="analysis-kpi-grid">
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Recurring in Range</div>
+          <div class="analysis-kpi-value" id="recRangeSpend">—</div>
+          <div class="analysis-kpi-sub" id="recRangeShare"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Est. Monthly Recurring</div>
+          <div class="analysis-kpi-value" id="recMonthly">—</div>
+          <div class="analysis-kpi-sub" id="recAnnual"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Fixed Recurring Share</div>
+          <div class="analysis-kpi-value" id="recFixedShare">—</div>
+          <div class="analysis-kpi-sub" id="recRecurringCount"></div>
+        </div>
+        <div class="analysis-kpi">
+          <div class="analysis-kpi-label">Top Recurring Categories</div>
+          <div class="analysis-kpi-value analysis-kpi-value-list" id="recTopCats">—</div>
+          <div class="analysis-kpi-sub">By monthly average</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- ── Charts Row 1 ── -->
   <div class="chart-row">
     <div class="chart-card glass-card chart-donut-wrap">
-      <div class="chart-title">Spending by Category</div>
+      <div class="title-row"><div class="chart-title">Spending by Category</div><span class="info-tip" tabindex="0" data-tooltip="Category mix for purchases in the current selection. Larger slices indicate bigger spending drivers.">?</span></div>
       <div class="donut-container">
         <canvas id="chartDonut"></canvas>
         <div class="donut-center">
@@ -184,7 +327,7 @@
       <div class="legend" id="donutLegend"></div>
     </div>
     <div class="chart-card glass-card chart-bar-wrap">
-      <div class="chart-title">Daily Spending Trend</div>
+      <div class="title-row"><div class="chart-title">Daily Spending Trend</div><span class="info-tip" tabindex="0" data-tooltip="Daily purchase totals across the selected time range. Hotter bars indicate unusually high-spend days.">?</span></div>
       <div class="chart-canvas-wrap"><canvas id="chartBar"></canvas></div>
     </div>
   </div>
@@ -192,11 +335,11 @@
   <!-- ── Charts Row 2 ── -->
   <div class="chart-row">
     <div class="chart-card glass-card chart-line-wrap">
-      <div class="chart-title">Cumulative Spending</div>
+      <div class="title-row"><div class="chart-title">Cumulative Spending</div><span class="info-tip" tabindex="0" data-tooltip="Running total of purchase spend through the selected period. A steeper line means faster spending accumulation.">?</span></div>
       <div class="chart-canvas-wrap"><canvas id="chartLine"></canvas></div>
     </div>
     <div class="chart-card glass-card chart-merchants-wrap">
-      <div class="chart-title">Top Merchants</div>
+      <div class="title-row"><div class="chart-title">Top Merchants</div><span class="info-tip" tabindex="0" data-tooltip="Merchants ranked by total purchase spend in the current selection.">?</span></div>
       <div class="chart-canvas-wrap"><canvas id="chartMerchants"></canvas></div>
     </div>
   </div>
@@ -206,7 +349,7 @@
 
     <!-- Top Spending Days -->
     <div class="glass-card top-days-card">
-      <div class="chart-title">🔥 Top Spending Days</div>
+      <div class="title-row"><div class="chart-title">🔥 Top Spending Days</div><span class="info-tip" tabindex="0" data-tooltip="The highest total purchase-spend days in the selected range, with merchants contributing to each spike.">?</span></div>
       <div id="topDaysList">
         <div class="loading-row">Loading…</div>
       </div>
@@ -214,7 +357,7 @@
 
     <!-- Credits & Refunds -->
     <div class="glass-card credits-card">
-      <div class="chart-title">↩ Credits &amp; Refunds</div>
+      <div class="title-row"><div class="chart-title">↩ Credits &amp; Refunds</div><span class="info-tip" tabindex="0" data-tooltip="Credits lower net spend. This panel summarizes refunds and other credit transactions in the selected range.">?</span></div>
       <div class="credits-summary">
         <div>
           <div class="credit-stat-label">Total Received</div>
@@ -238,7 +381,7 @@
 
   <!-- ── Foreign Currency Summary ── -->
   <div class="glass-card fx-card" id="fxCard" style="display:none">
-    <div class="chart-title">🌏 Foreign Currency Transactions</div>
+    <div class="title-row"><div class="chart-title">🌏 Foreign Currency Transactions</div><span class="info-tip" tabindex="0" data-tooltip="Transactions where the original foreign-currency amount was captured. Implied rate is THB paid divided by foreign amount.">?</span></div>
     <table class="fx-table">
       <thead>
         <tr>
@@ -258,7 +401,7 @@
 
     <!-- Day of Week -->
     <div class="chart-card glass-card">
-      <div class="chart-title">Spending by Day of Week</div>
+      <div class="title-row"><div class="chart-title">Spending by Day of Week</div><span class="info-tip" tabindex="0" data-tooltip="Highlights whether spending skews toward weekdays or weekends.">?</span></div>
       <div class="chart-canvas-wrap" style="height:220px"><canvas id="chartDow"></canvas></div>
       <div class="dow-summary">
         <div>
@@ -278,13 +421,71 @@
 
     <!-- Month-over-Month -->
     <div class="chart-card glass-card" id="momSection">
-      <div class="chart-title">Month-over-Month by Category</div>
+      <div class="title-row"><div class="chart-title">Month-over-Month by Category</div><span class="info-tip" tabindex="0" data-tooltip="Compares how category totals change across uploaded statements for this account.">?</span></div>
       <div id="momEmpty" class="loading-row" style="display:none">
         Upload at least 2 statements to see the month-over-month comparison.
       </div>
       <div class="chart-canvas-wrap" style="height:320px"><canvas id="chartMoM"></canvas></div>
     </div>
 
+  </div>
+
+  <!-- ── Behavior Charts ── -->
+  <div class="chart-row-2col">
+    <div class="chart-card glass-card">
+      <div class="title-row"><div class="chart-title">Spend by Day of Month</div><span class="info-tip" tabindex="0" data-tooltip="Aggregates spend by calendar day number to show whether the account spends earlier or later in the billing cycle.">?</span></div>
+      <div class="chart-canvas-wrap" style="height:260px"><canvas id="chartDom"></canvas></div>
+      <div class="dow-summary">
+        <div>
+          <div class="dow-stat-label">Days 1–10</div>
+          <div class="dow-stat-val" id="domEarlySpend">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Days 25–31</div>
+          <div class="dow-stat-val" id="domLateSpend">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Late-Cycle Share</div>
+          <div class="dow-stat-val" id="domLatePct">—</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-card glass-card">
+      <div class="title-row"><div class="chart-title">Merchant Frequency vs Ticket Size</div><span class="info-tip" tabindex="0" data-tooltip="Each bubble is a merchant. Farther right means more transactions, higher means larger average ticket, and larger bubbles mean more total spend.">?</span></div>
+      <div class="chart-canvas-wrap" style="height:260px"><canvas id="chartMerchantBubble"></canvas></div>
+      <div class="dow-summary">
+        <div>
+          <div class="dow-stat-label">Most Frequent Merchant</div>
+          <div class="dow-stat-val" id="bubbleFreqMerchant">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Highest Avg Ticket</div>
+          <div class="dow-stat-val" id="bubbleTicketMerchant">—</div>
+        </div>
+        <div>
+          <div class="dow-stat-label">Largest Bubble</div>
+          <div class="dow-stat-val" id="bubbleLargestMerchant">—</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Statement Comparison ── -->
+  <div class="glass-card comparison-card">
+    <div class="txn-header">
+      <h3 class="chart-title" style="margin:0">
+        Statement Comparison
+        <span class="recurring-sub">What changed versus the previous statement</span>
+      </h3>
+      <span class="info-tip" tabindex="0" data-tooltip="Compares the selected statement with the previous uploaded statement for the same account. When no statement is selected, it compares the latest statement with the one before it.">?</span>
+    </div>
+    <div id="comparisonEmpty" class="loading-row" style="display:none">
+      Upload at least 2 statements to unlock change analysis.
+    </div>
+    <div id="comparisonBody">
+      <div class="loading-row">Loading…</div>
+    </div>
   </div>
 
   <!-- ── Recurring Transactions ── -->
@@ -294,6 +495,7 @@
         🔁 Recurring Transactions
         <span class="recurring-sub">Merchants appearing across multiple statements</span>
       </h3>
+      <span class="info-tip" tabindex="0" data-tooltip="Recurring merchants are descriptions that appear across multiple statements. Fixed means the amounts stay within a tight variance band.">?</span>
       <div class="txn-controls">
         <label class="filter-label" style="margin-right:4px">Min. statements:</label>
         <select class="select-input" id="recurringMinOcc" style="min-width:70px">
@@ -327,7 +529,7 @@
   <!-- ── Transaction Table ── -->
   <div class="txn-section glass-card">
     <div class="txn-header">
-      <h3 class="chart-title" style="margin:0">Transactions</h3>
+      <h3 class="chart-title" style="margin:0">Transactions <span class="info-tip" tabindex="0" data-tooltip="All transactions in the selected range. Credits are highlighted separately from purchases.">?</span></h3>
       <div class="txn-controls">
         <input type="text" class="search-input" id="txnSearch" placeholder="Search merchant…" />
         <select class="select-input" id="txnCategory">
@@ -381,15 +583,33 @@ let toDate   = globalDateMax;
 // ── Chart.js defaults ──
 Chart.defaults.color = 'rgba(255,255,255,0.7)';
 Chart.defaults.borderColor = 'rgba(255,255,255,0.08)';
-Chart.defaults.font.family = "'Inter', sans-serif";
+Chart.defaults.font.family = "'Space Grotesk', sans-serif";
 
-let chartDonut, chartBar, chartLine, chartMerchants, chartDow, chartMoM;
+let chartDonut, chartBar, chartLine, chartMerchants, chartDow, chartMoM, chartDom, chartMerchantBubble;
 
 // ─────────────────────────────
 //  Helpers
 // ─────────────────────────────
 const fmt = n => '฿' + Number(n).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
 const qs  = s => document.querySelector(s);
+const pct = n => `${Number(n).toFixed(1)}%`;
+const ESSENTIAL_CATEGORIES = new Set([
+  'Groceries & Supermarket',
+  'Convenience Store',
+  'Transport & Ride-Hailing',
+  'Telecom & Utilities',
+  'Fuel & Automotive',
+  'Health & Beauty',
+  'Payment / Refund',
+]);
+const DISCRETIONARY_CATEGORIES = new Set([
+  'Food & Dining',
+  'Food Delivery',
+  'Shopping & E-Commerce',
+  'Tech Subscriptions',
+  'Streaming & Entertainment',
+  'Travel & Accommodation',
+]);
 
 function buildQuery() {
   const parts = [];
@@ -403,6 +623,40 @@ function updateActiveRange() {
   const el = qs('#activeRange');
   if (fromDate && toDate) el.textContent = `${fromDate}  →  ${toDate}`;
   else el.textContent = '';
+}
+
+function sumBy(items, fn) {
+  return items.reduce((acc, item) => acc + fn(item), 0);
+}
+
+function groupBy(items, keyFn) {
+  return items.reduce((acc, item) => {
+    const key = keyFn(item);
+    if (!acc[key]) acc[key] = [];
+    acc[key].push(item);
+    return acc;
+  }, {});
+}
+
+function fmtSignedCurrency(value) {
+  const sign = value > 0 ? '+' : value < 0 ? '−' : '';
+  return `${sign}${fmt(Math.abs(value))}`;
+}
+
+function statementScope() {
+  if (currentStmtId !== 'all') {
+    const idx = ALL_STATEMENTS.findIndex(s => String(s.id) === String(currentStmtId));
+    if (idx !== -1) {
+      return {
+        current: ALL_STATEMENTS[idx],
+        previous: ALL_STATEMENTS[idx + 1] || null,
+      };
+    }
+  }
+  return {
+    current: ALL_STATEMENTS[0] || null,
+    previous: ALL_STATEMENTS[1] || null,
+  };
 }
 
 // ─────────────────────────────
@@ -854,6 +1108,345 @@ function renderTable() {
   renderPagination(filtered.length);
 }
 
+function renderAnalyticalPanels(summary) {
+  const purchases = allTransactions.filter(t => !t.is_credit);
+  const grossSpend = sumBy(purchases, t => Number(t.amount) || 0);
+  const totalCredits = Number(summary.total_credits || 0);
+  const netSpend = grossSpend - totalCredits;
+  const activeDays = new Set(purchases.map(t => t.post_date).filter(Boolean)).size;
+  const fxSpend = sumBy(purchases.filter(t => t.foreign_currency), t => Number(t.amount) || 0);
+
+  const merchantMap = {};
+  const categoryMap = {};
+  purchases.forEach(t => {
+    const merchant = (t.description || 'Unknown').trim();
+    const amount = Number(t.amount) || 0;
+    if (!merchantMap[merchant]) merchantMap[merchant] = { total: 0, count: 0, amounts: [] };
+    merchantMap[merchant].total += amount;
+    merchantMap[merchant].count += 1;
+    merchantMap[merchant].amounts.push(amount);
+    const cat = t.category || 'Other';
+    categoryMap[cat] = (categoryMap[cat] || 0) + amount;
+  });
+
+  const merchantEntries = Object.entries(merchantMap).sort((a, b) => b[1].total - a[1].total);
+  const categoryEntries = Object.entries(categoryMap).sort((a, b) => b[1] - a[1]);
+  const uniqueMerchants = merchantEntries.length;
+  const topMerchant = merchantEntries[0] || null;
+  const topFiveSpend = merchantEntries.slice(0, 5).reduce((acc, [, val]) => acc + val.total, 0);
+  const topCategory = categoryEntries[0] || ['N/A', 0];
+  const avgTicket = purchases.length ? grossSpend / purchases.length : 0;
+  const txPerMerchant = uniqueMerchants ? purchases.length / uniqueMerchants : 0;
+  const merchantDensity = activeDays ? uniqueMerchants / activeDays : 0;
+
+  const essentialSpend = categoryEntries
+    .filter(([cat]) => ESSENTIAL_CATEGORIES.has(cat))
+    .reduce((acc, [, amount]) => acc + amount, 0);
+  const discretionarySpend = categoryEntries
+    .filter(([cat]) => DISCRETIONARY_CATEGORIES.has(cat))
+    .reduce((acc, [, amount]) => acc + amount, 0);
+  const weekendSpend = sumBy(purchases.filter(t => {
+    if (!t.post_date) return false;
+    const dow = (new Date(t.post_date).getDay() + 6) % 7;
+    return dow >= 5;
+  }), t => Number(t.amount) || 0);
+  const earlySpend = sumBy(purchases.filter(t => {
+    if (!t.post_date) return false;
+    return new Date(t.post_date).getDate() <= 10;
+  }), t => Number(t.amount) || 0);
+  const lateSpend = sumBy(purchases.filter(t => {
+    if (!t.post_date) return false;
+    return new Date(t.post_date).getDate() >= 25;
+  }), t => Number(t.amount) || 0);
+
+  const recurringNames = new Set(allRecurring.map(r => r.description));
+  const recurringRangeSpend = sumBy(purchases.filter(t => recurringNames.has(t.description)), t => Number(t.amount) || 0);
+  const recurringMonthly = sumBy(allRecurring, r => Number(r.avg_amount) || 0);
+  const fixedRecurringMonthly = sumBy(allRecurring.filter(r => r.is_fixed), r => Number(r.avg_amount) || 0);
+  const recurringByCategory = {};
+  allRecurring.forEach(r => {
+    recurringByCategory[r.category] = (recurringByCategory[r.category] || 0) + (Number(r.avg_amount) || 0);
+  });
+  const topRecurringCats = Object.entries(recurringByCategory)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+    .map(([name, amount]) => `${CAT_ICONS[name] || '•'} ${name} ${fmt(amount)}`);
+
+  qs('#miniNetSpend').textContent = fmt(netSpend);
+  qs('#miniRefundRate').textContent = grossSpend ? `${pct((totalCredits / grossSpend) * 100)} refunded / credited` : 'No purchase spend';
+  qs('#miniMerchants').textContent = uniqueMerchants.toLocaleString();
+  qs('#miniMerchantDensity').textContent = `${merchantDensity.toFixed(1)} merchants per active day`;
+  qs('#miniActiveDays').textContent = activeDays.toLocaleString();
+  qs('#miniActiveRate').textContent = `${activeDays} of ${summary.days_in_period || 0} day${summary.days_in_period === 1 ? '' : 's'} active`;
+  qs('#miniFxShare').textContent = grossSpend ? pct((fxSpend / grossSpend) * 100) : '0.0%';
+  qs('#miniFxSpend').textContent = fxSpend ? `${fmt(fxSpend)} in foreign-linked spend` : 'No foreign-currency spend';
+
+  qs('#payHeadroom').textContent = fmt(summary.credit_headroom || 0);
+  qs('#payHeadroomSub').textContent = summary.credit_line
+    ? `${pct(((summary.credit_headroom || 0) / summary.credit_line) * 100)} of line still available`
+    : 'No credit line found';
+  qs('#payMinRatio').textContent = pct(summary.min_payment_ratio || 0);
+  qs('#payMinRatioSub').textContent = `${fmt(summary.minimum_payment || 0)} minimum on ${fmt(summary.current_balance || 0)} balance`;
+  qs('#payDueDays').textContent = summary.days_until_due == null ? '—' : `${summary.days_until_due}d`;
+  qs('#payDueDate').textContent = summary.payment_due_date || 'Due date unavailable';
+  qs('#payWindowDays').textContent = summary.statement_window_days == null ? '—' : `${summary.statement_window_days}d`;
+  qs('#payPressureBadge').textContent = summary.days_until_due == null
+    ? 'No due-date timing'
+    : summary.days_until_due < 0
+      ? 'Due date passed'
+      : summary.days_until_due <= 5
+        ? 'Action window is tight'
+        : summary.credit_utilization > 80
+          ? 'High utilization'
+          : 'Within normal range';
+
+  qs('#concTopCatShare').textContent = grossSpend ? pct((topCategory[1] / grossSpend) * 100) : '0.0%';
+  qs('#concTopCatName').textContent = topCategory[0] === 'N/A' ? 'No purchases' : `${CAT_ICONS[topCategory[0]] || ''} ${topCategory[0]}`;
+  qs('#concTopMerchantShare').textContent = topMerchant && grossSpend ? pct((topMerchant[1].total / grossSpend) * 100) : '0.0%';
+  qs('#concTopMerchantName').textContent = topMerchant ? topMerchant[0] : 'No merchants';
+  qs('#concTopFiveShare').textContent = grossSpend ? pct((topFiveSpend / grossSpend) * 100) : '0.0%';
+  qs('#concMerchantSpread').textContent = `${uniqueMerchants.toLocaleString()} unique merchant${uniqueMerchants === 1 ? '' : 's'}`;
+  qs('#concAvgTicket').textContent = fmt(avgTicket);
+  qs('#concTxnPerMerchant').textContent = `${txPerMerchant.toFixed(1)} txn per merchant avg`;
+
+  qs('#mixEssentialShare').textContent = grossSpend ? pct((essentialSpend / grossSpend) * 100) : '0.0%';
+  qs('#mixEssentialSpend').textContent = fmt(essentialSpend);
+  qs('#mixDiscretionaryShare').textContent = grossSpend ? pct((discretionarySpend / grossSpend) * 100) : '0.0%';
+  qs('#mixDiscretionarySpend').textContent = fmt(discretionarySpend);
+  qs('#mixEarlyShare').textContent = grossSpend ? pct((earlySpend / grossSpend) * 100) : '0.0%';
+  qs('#mixEarlyLateSub').textContent = `Late cycle ${grossSpend ? pct((lateSpend / grossSpend) * 100) : '0.0%'} · ${fmt(lateSpend)}`;
+  qs('#mixWeekendShare').textContent = grossSpend ? pct((weekendSpend / grossSpend) * 100) : '0.0%';
+  qs('#mixWeekendSpend').textContent = fmt(weekendSpend);
+
+  qs('#recRangeSpend').textContent = fmt(recurringRangeSpend);
+  qs('#recRangeShare').textContent = grossSpend ? `${pct((recurringRangeSpend / grossSpend) * 100)} of current spend` : '0.0% of current spend';
+  qs('#recMonthly').textContent = fmt(recurringMonthly);
+  qs('#recAnnual').textContent = `${fmt(recurringMonthly * 12)} estimated annually`;
+  qs('#recFixedShare').textContent = recurringMonthly ? pct((fixedRecurringMonthly / recurringMonthly) * 100) : '0.0%';
+  qs('#recRecurringCount').textContent = `${allRecurring.length} recurring merchant${allRecurring.length === 1 ? '' : 's'}`;
+  qs('#recTopCats').textContent = topRecurringCats.length ? topRecurringCats.join(' · ') : 'No recurring categories';
+}
+
+function loadDayOfMonth() {
+  const labels = Array.from({ length: 31 }, (_, i) => String(i + 1));
+  const totals = Array(31).fill(0);
+  const purchases = allTransactions.filter(t => !t.is_credit && t.post_date);
+
+  purchases.forEach(t => {
+    const day = new Date(t.post_date).getDate();
+    totals[day - 1] += Number(t.amount) || 0;
+  });
+
+  if (chartDom) chartDom.destroy();
+  chartDom = new Chart(qs('#chartDom').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Spend by day number',
+        data: totals,
+        borderColor: '#76dfd0',
+        backgroundColor: 'rgba(118,223,208,0.18)',
+        pointRadius: 3,
+        fill: true,
+        tension: 0.28,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: c => ` ${fmt(c.raw)}` } }
+      },
+      scales: {
+        x: { grid: { display: false } },
+        y: {
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { callback: v => '฿' + v.toLocaleString() }
+        }
+      }
+    }
+  });
+
+  const total = totals.reduce((a, b) => a + b, 0);
+  const early = totals.slice(0, 10).reduce((a, b) => a + b, 0);
+  const late = totals.slice(24).reduce((a, b) => a + b, 0);
+  qs('#domEarlySpend').textContent = fmt(early);
+  qs('#domLateSpend').textContent = fmt(late);
+  qs('#domLatePct').textContent = total ? pct((late / total) * 100) : '0.0%';
+}
+
+function loadMerchantBubble() {
+  const merchantMap = {};
+  allTransactions.filter(t => !t.is_credit).forEach(t => {
+    const merchant = (t.description || 'Unknown').trim();
+    const amount = Number(t.amount) || 0;
+    if (!merchantMap[merchant]) merchantMap[merchant] = { total: 0, count: 0 };
+    merchantMap[merchant].total += amount;
+    merchantMap[merchant].count += 1;
+  });
+
+  const data = Object.entries(merchantMap)
+    .map(([merchant, d]) => ({
+      merchant,
+      x: d.count,
+      y: d.total / d.count,
+      r: Math.max(6, Math.min(22, Math.sqrt(d.total) / 8)),
+      total: d.total,
+    }))
+    .sort((a, b) => b.total - a.total)
+    .slice(0, 12);
+
+  if (chartMerchantBubble) chartMerchantBubble.destroy();
+  chartMerchantBubble = new Chart(qs('#chartMerchantBubble').getContext('2d'), {
+    type: 'bubble',
+    data: {
+      datasets: [{
+        data,
+        backgroundColor: 'rgba(255, 210, 122, 0.35)',
+        borderColor: '#ffd27a',
+        borderWidth: 1.5,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            title: items => items[0]?.raw?.merchant || '',
+            label: item => {
+              const raw = item.raw;
+              return [
+                ` Total: ${fmt(raw.total)}`,
+                ` Txn count: ${raw.x}`,
+                ` Avg ticket: ${fmt(raw.y)}`,
+              ];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          title: { display: true, text: 'Transaction count' },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { precision: 0 }
+        },
+        y: {
+          title: { display: true, text: 'Average ticket size' },
+          grid: { color: 'rgba(255,255,255,0.06)' },
+          ticks: { callback: v => '฿' + v.toLocaleString() }
+        }
+      }
+    }
+  });
+
+  const mostFreq = [...data].sort((a, b) => b.x - a.x)[0];
+  const highestTicket = [...data].sort((a, b) => b.y - a.y)[0];
+  const largest = data[0];
+  qs('#bubbleFreqMerchant').textContent = mostFreq ? `${mostFreq.merchant} (${mostFreq.x})` : '—';
+  qs('#bubbleTicketMerchant').textContent = highestTicket ? `${highestTicket.merchant} (${fmt(highestTicket.y)})` : '—';
+  qs('#bubbleLargestMerchant').textContent = largest ? `${largest.merchant} (${fmt(largest.total)})` : '—';
+}
+
+async function loadComparison() {
+  const comparisonEmpty = qs('#comparisonEmpty');
+  const comparisonBody = qs('#comparisonBody');
+  const scope = statementScope();
+
+  if (!scope.current || !scope.previous) {
+    comparisonEmpty.style.display = 'block';
+    comparisonBody.innerHTML = '';
+    return;
+  }
+
+  comparisonEmpty.style.display = 'none';
+
+  const [currResp, prevResp] = await Promise.all([
+    fetch(`/api/account/${ACCOUNT_NUM}/transactions?statement_id=${scope.current.id}`),
+    fetch(`/api/account/${ACCOUNT_NUM}/transactions?statement_id=${scope.previous.id}`),
+  ]);
+  const currentTx = (await currResp.json()).filter(t => !t.is_credit);
+  const previousTx = (await prevResp.json()).filter(t => !t.is_credit);
+
+  const currSpend = sumBy(currentTx, t => Number(t.amount) || 0);
+  const prevSpend = sumBy(previousTx, t => Number(t.amount) || 0);
+  const currMerchants = new Set(currentTx.map(t => t.description));
+  const prevMerchants = new Set(previousTx.map(t => t.description));
+  const newMerchants = [...currMerchants].filter(m => !prevMerchants.has(m)).slice(0, 6);
+  const dormantMerchants = [...prevMerchants].filter(m => !currMerchants.has(m)).slice(0, 6);
+
+  const toMap = txns => txns.reduce((acc, t) => {
+    acc[t.category] = (acc[t.category] || 0) + (Number(t.amount) || 0);
+    return acc;
+  }, {});
+  const currCat = toMap(currentTx);
+  const prevCat = toMap(previousTx);
+  const categories = [...new Set([...Object.keys(currCat), ...Object.keys(prevCat)])];
+  const movers = categories.map(cat => ({
+    category: cat,
+    delta: (currCat[cat] || 0) - (prevCat[cat] || 0),
+    current: currCat[cat] || 0,
+    previous: prevCat[cat] || 0,
+  }))
+  .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+  .slice(0, 5);
+
+  const currTopMerchant = Object.entries(groupBy(currentTx, t => t.description))
+    .map(([name, tx]) => ({ name, total: sumBy(tx, t => Number(t.amount) || 0) }))
+    .sort((a, b) => b.total - a.total)[0];
+  const prevTopMerchant = Object.entries(groupBy(previousTx, t => t.description))
+    .map(([name, tx]) => ({ name, total: sumBy(tx, t => Number(t.amount) || 0) }))
+    .sort((a, b) => b.total - a.total)[0];
+
+  const currUtil = scope.current.credit_line ? (scope.current.total_balance / scope.current.credit_line) * 100 : 0;
+  const prevUtil = scope.previous.credit_line ? (scope.previous.total_balance / scope.previous.credit_line) * 100 : 0;
+  const utilDelta = currUtil - prevUtil;
+
+  comparisonBody.innerHTML = `
+    <div class="comparison-top-grid">
+      <div class="comparison-pill">
+        <span>Spend Delta</span>
+        <strong class="${currSpend > prevSpend ? 'text-danger' : 'text-teal'}">${fmtSignedCurrency(currSpend - prevSpend)}</strong>
+        <small>${scope.current.statement_date} vs ${scope.previous.statement_date}</small>
+      </div>
+      <div class="comparison-pill">
+        <span>Utilization Delta</span>
+        <strong class="${currUtil > prevUtil ? 'text-danger' : utilDelta < 0 ? 'text-teal' : ''}">${utilDelta > 0 ? '+' : ''}${utilDelta.toFixed(1)} pts</strong>
+        <small>${pct(currUtil)} now vs ${pct(prevUtil)} prior</small>
+      </div>
+      <div class="comparison-pill">
+        <span>New Merchants</span>
+        <strong>${newMerchants.length}</strong>
+        <small>${newMerchants.slice(0, 2).join(' · ') || 'None'}</small>
+      </div>
+      <div class="comparison-pill">
+        <span>Dormant Merchants</span>
+        <strong>${dormantMerchants.length}</strong>
+        <small>${dormantMerchants.slice(0, 2).join(' · ') || 'None'}</small>
+      </div>
+    </div>
+    <div class="comparison-grid">
+      <div class="comparison-block">
+        <div class="comparison-block-title">Largest Category Moves</div>
+        ${movers.length ? movers.map(m => `
+          <div class="comparison-row">
+            <span>${CAT_ICONS[m.category] || '•'} ${m.category}</span>
+            <span class="${m.delta > 0 ? 'text-danger' : m.delta < 0 ? 'text-teal' : ''}">${fmtSignedCurrency(m.delta)}</span>
+          </div>`).join('') : '<div class="comparison-empty-text">No category movement found.</div>'}
+      </div>
+      <div class="comparison-block">
+        <div class="comparison-block-title">Merchant Shifts</div>
+        <div class="comparison-row"><span>Top merchant now</span><span>${currTopMerchant ? `${currTopMerchant.name} · ${fmt(currTopMerchant.total)}` : '—'}</span></div>
+        <div class="comparison-row"><span>Top merchant before</span><span>${prevTopMerchant ? `${prevTopMerchant.name} · ${fmt(prevTopMerchant.total)}` : '—'}</span></div>
+        <div class="comparison-row"><span>New merchants</span><span>${newMerchants.slice(0, 3).join(', ') || 'None'}</span></div>
+        <div class="comparison-row"><span>Dormant merchants</span><span>${dormantMerchants.slice(0, 3).join(', ') || 'None'}</span></div>
+      </div>
+    </div>`;
+}
+
 // Reset page on filter change
 qs('#txnSearch').addEventListener('input',  () => { currentPage = 1; renderTable(); });
 qs('#txnCategory').addEventListener('change', () => { currentPage = 1; renderTable(); });
@@ -1186,6 +1779,7 @@ async function loadRecurring() {
   const r  = await fetch(`/api/account/${ACCOUNT_NUM}/recurring`);
   allRecurring = await r.json();
   renderRecurring();
+  if (_lastSummary) renderAnalyticalPanels(_lastSummary);
 }
 
 function renderRecurring() {
@@ -1238,9 +1832,13 @@ async function refreshAll() {
     loadTransactions(),
   ]);
   // Client-side analytics that depend on allTransactions or _lastSummary
+  if (_lastSummary) renderAnalyticalPanels(_lastSummary);
   loadDayOfWeek();
+  loadDayOfMonth();
+  loadMerchantBubble();
   loadTopDays();
   loadFxSummary();
+  await loadComparison();
   if (_lastSummary) {
     updateBurnRate(_lastSummary);
     renderCredits(_lastSummary);
